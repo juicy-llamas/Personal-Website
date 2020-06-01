@@ -46,7 +46,7 @@ var compile_shader_kun = ( src, type ) => {
 		return ret;
 	else {
 		var typStr = type == gl.VERTEX_SHADER ? "vertex shader" : ( 
-				type == gl.VERTEX_SHADER ? "fragment shader" : 
+				type == gl.FRAGMENT_SHADER ? "fragment shader" : 
 				"undefined shader" );
 		console.error( "a(n) " + typStr + " shader did not compile: " + 
 				gl.getShaderInfoLog( ret ) );
@@ -129,36 +129,30 @@ var bkgd = {
 	vss : `
 		attribute vec2 A_nodePos;
 		attribute vec2 A_textCoord;
-
-		uniform vec2 U_resolution;
-
 		varying highp vec2 V_textCoord;
-
 		void main () {
-
-			vec2 realTalk = ( A_nodePos / U_resolution ) * 2.0 - 1.0;
-			gl_Position = vec4( realTalk, 0.0, 1.0 );
+			gl_Position = vec4( A_nodePos, 0.0, 1.0 );
 			
 			V_textCoord = A_textCoord;
-
 		}
 	`,
 	fss : `
 		precision mediump float;
 
-		uniform sampler2D U_texture;
-		//uniform vec2 U_imageRes;
-
+		uniform vec2 U_resolution;
 		varying highp vec2 V_textCoord;
+		uniform sampler2D U_texture;
 
-		void main () {
+		void main() {
+			float square_size = floor(2.0 + 30.0 * 0.5);
 
-			gl_FragColor = texture2D( U_texture, V_textCoord );
+			vec2 center = square_size * floor( V_textCoord * 
+					U_resolution / square_size ) + square_size * vec2(0.5, 0.5);
+			vec3 pixel_color = 0.4 * texture2D(U_texture, center / U_resolution).rgb;
 
-			/*gl_FragColor = vec4( texture2D( U_texture, 
-					V_textCoord ).rgb, 1.0 );*/
-
+			gl_FragColor = vec4(pixel_color, 1.0);
 		}
+
 	`,
 
 	init : () => {
@@ -171,10 +165,10 @@ var bkgd = {
 		gl.useProgram( bkgd.prog );
 
 		// fill the data buffers with original values.
-		const px = cv.width * ( 1 + bkgd.drawCont.weight );
-		const py = cv.height * ( 1 + bkgd.drawCont.weight );
-		const nx = cv.width * ( - bkgd.drawCont.weight );
-		const ny = cv.height * ( - bkgd.drawCont.weight );
+		const px = ( 1 + bkgd.drawCont.weight );
+		const py = ( 1 + bkgd.drawCont.weight );
+		const nx = -px;
+		const ny = -py;
 		bkgd.nodeData = new Float32Array( [
 			nx, ny,
 			nx, py,
@@ -218,8 +212,8 @@ var bkgd = {
 
 	drawCont : {
 
-		weight : 0.2,
-		f_mult : 0.05,
+		weight : 0.1,
+		f_mult : 0.00002,
 		bx : 0,
 		by : 0,
 
@@ -228,8 +222,8 @@ var bkgd = {
 			console.log( "MOUSE => mx: " + mx + ", my: " + my );
 			console.log( "CANVAS => cw: " + cw + ", ch: " + ch );
 			console.log( "DELTA => " + delta );
-			*/var fx = this.f_mult * ( mx - this.bx / cw / this.weight );
-			var fy = this.f_mult * ( my - this.by / ch / this.weight );
+			*/var fx = this.f_mult * ( mx - this.bx / this.weight );
+			var fy = this.f_mult * ( my - this.by / this.weight );
 			//console.log( "FORCE => fx: " + fx + ", fy: " + fy );
 
 			this.bx = fx * delta * delta + this.bx;
@@ -348,7 +342,11 @@ var animate = {
 
 		updateFps : function () {
 			// Computing a global moving average.
-			var fpsLocAvg = this.fpsSum / this.fpsUpdate;
+
+			var rfps = Math.round( this.fps * 100 ) / 100;
+			this.fpsDisp.innerHTML = "FPS: " + rfps;
+
+			/*var fpsLocAvg = this.fpsSum / this.fpsUpdate;
 			this.fpsAvg = ( fpsLocAvg + this.fpsAvg ) / 2;
 
 			// rounding values for disp.
@@ -377,7 +375,7 @@ var animate = {
 			// reset values.
 			this.fpsHigh = 0;
 			this.fpsLow = 9000;
-			this.fpsSum = 0;
+			this.fpsSum = 0;*/
 		},
 
 		// Returns the time delta between this frame and the last, or 0 if the
@@ -387,7 +385,17 @@ var animate = {
 			if ( this.tPrev === 0 ) this.tPrev = tNow;
 			var delta = tNow - this.tPrev;
 			this.tPrev = tNow;
-			//var fpsNow = 1000 / delta;
+
+			
+
+			var fpsNow = 1000 / delta;
+			this.fps = fpsNow;
+			this.frameCount++;
+
+			if ( this.frameCount >= this.fpsUpdate ) {
+				this.frameCount = 0;
+				this.updateFps();
+			}
 			//	console.log( fpsNow );
 
 			/*if ( fpsNow < this.fpsMax ) {
@@ -396,12 +404,6 @@ var animate = {
 				if ( this.fpsLow > this.fps ) this.fpsLow = this.fps;
 				if ( this.fpsHigh < this.fps ) this.fpsHigh = this.fps;
 				this.fpsSum += this.fps;
-				this.frameCount++;
-
-				if ( this.frameCount >= this.fpsUpdate ) {
-					this.frameCount = 0;
-					this.updateFps();
-				}
 
 				return delta;
 			}
@@ -421,4 +423,3 @@ var animate = {
 };
 
 window.onload = init_kun;
-
