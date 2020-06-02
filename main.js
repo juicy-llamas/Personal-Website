@@ -131,6 +131,7 @@ var bkgd = {
 		attribute vec2 A_nodePos;
 		attribute vec2 A_textCoord;
 		varying highp vec2 V_textCoord;
+		varying highp vec2 V_nodePos;
 
 		void main () {
 			gl_Position = vec4( A_nodePos, 0.0, 1.0 );
@@ -143,11 +144,12 @@ var bkgd = {
 		precision mediump float;
 
 		uniform vec2 U_resolution;
+		uniform vec2 U_box_center;
 		uniform vec2 U_mouse;
 		uniform sampler2D U_texture;
 		varying highp vec2 V_textCoord;
 
-		float pixel_rad = 0.2;
+		float pixel_rad = 100.;
 
 		void main() {
 			float square_size = floor(2.0 + 30.0 * 0.5);
@@ -155,14 +157,15 @@ var bkgd = {
 			vec2 center = square_size * floor( V_textCoord * 
 					U_resolution / square_size ) + square_size * vec2(0.5, 0.5);
 			vec2 center_norm = center / U_resolution;
+			vec2 mous = U_mouse - U_box_center;
 			vec3 pixel_color;
 
-			if ( distance( center_norm, U_mouse ) < pixel_rad )
+			if ( distance( center, mous ) < pixel_rad )
 				pixel_color = texture2D( U_texture, center_norm ).rgb;
 			else
 				pixel_color = texture2D( U_texture, V_textCoord ).rgb;
 
-			gl_FragColor = vec4(pixel_color, 1.0);
+			gl_FragColor = vec4( pixel_color, 1.0 );
 		}
 	`,
 
@@ -188,10 +191,10 @@ var bkgd = {
 		] );
 
 		bkgd.textData = new Float32Array( [
-			0, 0,
 			0, 1,
-			1, 0,
-			1, 1
+			0, 0,
+			1, 1,
+			1, 0
 		] );
 
 		// get the program vars
@@ -199,17 +202,20 @@ var bkgd = {
 		bkgd.aTextCoord = gl.getAttribLocation( bkgd.prog, "A_textCoord" );
 		bkgd.uResolution = gl.getUniformLocation( bkgd.prog, "U_resolution" );
 		bkgd.uTexture = gl.getUniformLocation( bkgd.prog, "U_texture" );
-		bkgd.uM = gl.getUniformLocation( bkgd.prog, "U_mouse" );
+		bkgd.uMouse = gl.getUniformLocation( bkgd.prog, "U_mouse" );
+		bkgd.uBoxCenter = gl.getUniformLocation( bkgd.prog, "U_box_center" );
 
 		// create our buffer objects
 		bkgd.nodeBuffer = create_buffer_kun( bkgd.nodeData, gl.DYNAMIC_DRAW );
-		bkgd.textBuffer = create_buffer_kun( bkgd.textData, gl.DYNAMIC_DRAW );
+		bkgd.textBuffer = create_buffer_kun( bkgd.textData, gl.STATIC_DRAW );
 
 		// set up the texture
 		bkgd.texture = create_texture_kun( document.getElementById( "MILK" ) );
 
 		// set the uniform vars
 		gl.uniform2f( bkgd.uResolution, cv.width, cv.height );
+		gl.uniform2f( bkgd.uMouse, 0, 0 );
+		gl.uniform2f( bkgd.uBoxCenter, 0, 0 );
 		gl.uniform1i( bkgd.uTexture, 0 );
 
 		// bind the vertex attributes to the buffer positions
@@ -246,6 +252,8 @@ var bkgd = {
 				elm += ind % 2 ? this.by : this.bx;
 				return elm;
 			} );
+
+			gl.uniform2f( bkgd.uBoxCenter, this.bx * cw, -this.by * ch );
 
 			gl.bindBuffer( gl.ARRAY_BUFFER, bkgd.nodeBuffer );
 			gl.bufferSubData( gl.ARRAY_BUFFER, 0, update, 0, 8 );
@@ -324,6 +332,11 @@ var animate = {
 
 		animate.cw = cv.width / 2;
 		animate.ch = cv.height / 2;
+		animate.mx = 0;
+		animate.my = 0;
+
+		gl.uniform2f( bkgd.uResolution, cv.width, cv.height );
+		gl.uniform2f( bkgd.uMouse, 0, 0 );
 
 		// for obj in objects call resize_kun
 		bkgd.drawCont.loc_resize_kun();
@@ -336,7 +349,10 @@ var animate = {
 		animate.mx = e.clientX / animate.cw - 1;
 		animate.my = -1 * ( e.clientY / animate.ch - 1 );
 	
-		gl.uniform2f( bkgd.uMouse animate.mx, animate.my );
+		const wt = 1 - bkgd.drawCont.weight;
+		const wi = bkgd.drawCont.weight;
+		gl.uniform2f( bkgd.uMouse, e.clientX * wt + wi * animate.cw, 
+					 e.clientY * wt + wi * animate.ch );
 
 		window.onmousemove = null;
 	},
