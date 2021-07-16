@@ -1,0 +1,37 @@
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+}
+
+#content {
+	position: relative;
+	display: block;
+}
+
+#content > canvas {
+	position: relative;
+	display: block;
+}
+
+#content > div {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 10;
+	display: block;
+}
+
+#over-canvas {
+	overflow: visible;
+}
+
+#framerate {
+	color: white;
+	font-family: 'Baloo Paaji 2', sans-serif;
+	line-height: 18px;
+	top: 10px;
+	left: 10px;
+	position: relative;
+}

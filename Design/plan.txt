@@ -1,0 +1,12 @@
+GL:
+	- Drawing Arcs / circles
+		- Inside the circle will be pixelated!
+	- Background
+	- Circle Placement Algorithm for different screen sizes
+	- Hovering over circles to make them bigger, and showing / positioning text over them.
+	- Clicking and making everything else fade out and then expanding the circle.
+HTML/CSS:
+	- Formatting the layout of the inner pages / picking fonts and stuff.
+	- Doing the clicky SVGs and animating them.
+	- Creating sub pages for the projects (fade out the elms on the page, and fade in the ones relating to the projects?)
+	- Audio Equalizer
