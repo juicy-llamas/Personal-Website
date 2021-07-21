@@ -184,21 +184,69 @@ const fn = () => {
 		let circleData = [];
 		let circles = [];
 		
+		const colorCenter = [ .9, .9, .9, 1 ];
+		const colorSides = [ 0, 1, 0, 1 ];
+
 		const createCircle = ( cx, cy, r, spin_rate, angle_offset ) => {
 			circles.push( cx );
 			circles.push( cy );
 			circles.push( spin_rate );
 			circles.push( r );
+			circles.push( 0 );	// Are we animating? 1 for forwards, -1 for backwards, 0 for no animation
+			circles.push( 0 );	// Where are we in our animation?
 			let ang1 = angle_offset + Math.PI > Math.PI * 2 ? angle_offset - Math.PI : angle_offset + Math.PI;
 			let ang2 = angle_offset + Math.PI * 1.7 > Math.PI * 2 ? angle_offset - Math.PI * 0.3 : angle_offset + Math.PI * 1.7;
 			let ang3 = angle_offset + Math.PI * 0.7 > Math.PI * 2 ? angle_offset - Math.PI * 1.3 : angle_offset + Math.PI * 0.7;
 			
 			circleData = [ ...circleData, 
-				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , 0.9, 0.9, 0.9, 1.,
-				cx, cy, r, r * 0.9, ang1, ang2, 0, 1., 0., 1.,
-				cx, cy, r, r * 0.9, angle_offset, ang3, 0, 1., 0., 1.,
+				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , ...colorCenter,
+				cx, cy, r, r * 0.9, ang1, ang2, ...colorSides,
+				cx, cy, r, r * 0.9, angle_offset, ang3, ...colorSides,
 			];
 		};
+
+		const SCHEIGMOIDE ( max, slope, t ) => {
+			return max / ( 1 + Math.exp( - slope * t ) );
+		};
+
+		const updateCircle = ( cx, cy, r, spin_rate, index ) => {
+			const cx = circles[ index * 4 + 0 ];
+			const cy = circles[ index * 4 + 1 ];
+			let r = circles[ index * 4 + 2 ];
+			let spin_rate = circles[ index * 4 + 3 ];
+			const is_anim = circles[ index * 4 + 4 ];
+			let anim_time = circles[ index * 4 + 5 ];
+
+			if ( is_anim != 0 ) {
+				const r_ =
+			}
+
+			circleData[ index * CIRC_SIZE * 3 + 0 ] = cx;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE ] = cx;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 ] = cx;
+			circleData[ index * CIRC_SIZE * 3 + 1 ] = cy;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 1 ] = cy;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 1 ] = cy;
+			circleData[ index * CIRC_SIZE * 3 + 2 ] = r * 0.6;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 2 ] = r;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 3 ] = r * 0.9;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 2 ] = r;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 3 ] = r * 0.9;
+
+			const one = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 4 ];
+			const two = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 5 ];
+			const thr = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 4 ];
+			const fou = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 5 ];
+			const rate = spin_rate * tDelta / 1000;
+
+			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 4 ] = one + rate >= 2 * Math.PI ? one + rate - 2 * Math.PI : one + rate;
+			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 5 ] = two + rate >= 2 * Math.PI ? two + rate - 2 * Math.PI : two + rate;
+			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 4 ] = thr + rate >= 2 * Math.PI ? thr + rate - 2 * Math.PI : thr + rate;
+			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 5 ] = fou + rate >= 2 * Math.PI ? fou + rate - 2 * Math.PI : fou + rate;
+
+			gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
+			gl.bufferSubData( gl.ARRAY_BUFFER, 0, new Float32Array( circleData ), 0, Math.round( NUM_OF_CIRCLES * 3 * CIRC_SIZE ) );
+		}
 		
 // 		createCircle( 300, 300, 100, RESTING_SPIN_RATE, 0 );
 // 		createCircle( 600, 300, 100, RESTING_SPIN_RATE, 0 );
@@ -350,34 +398,39 @@ const fn = () => {
 			gl.useProgram( program );
 			
 			for ( var i = 0; i < NUM_OF_CIRCLES; i++ ) {
-				const one = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 4 ];
-				const two = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 5 ];
-				const thr = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 4 ];
-				const fou = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 5 ];
-				const rate = circles[ 4 * i + 2 ] * tDelta / 1000;
-				
-				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 4 ] = one + rate >= 2 * Math.PI ? one + rate - 2 * Math.PI : one + rate;
-				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 5 ] = two + rate >= 2 * Math.PI ? two + rate - 2 * Math.PI : two + rate;
-				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 4 ] = thr + rate >= 2 * Math.PI ? thr + rate - 2 * Math.PI : thr + rate;
-				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 5 ] = fou + rate >= 2 * Math.PI ? fou + rate - 2 * Math.PI : fou + rate;
+				updateCircle( -1, -1, -1, -1, i );
+// 				const one = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 4 ];
+// 				const two = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 5 ];
+// 				const thr = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 4 ];
+// 				const fou = circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 5 ];
+// 				const rate = circles[ 4 * i + 2 ] * tDelta / 1000;
+//
+// 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 4 ] = one + rate >= 2 * Math.PI ? one + rate - 2 * Math.PI : one + rate;
+// 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 5 ] = two + rate >= 2 * Math.PI ? two + rate - 2 * Math.PI : two + rate;
+// 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 4 ] = thr + rate >= 2 * Math.PI ? thr + rate - 2 * Math.PI : thr + rate;
+// 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 5 ] = fou + rate >= 2 * Math.PI ? fou + rate - 2 * Math.PI : fou + rate;
 				
 // 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 4 ] = one + rate;
 // 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE + 5 ] = two + rate;
 // 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 4 ] = thr + rate;
 // 				circleData[ CIRC_SIZE * 3 * i + CIRC_SIZE * 2 + 5 ] = fou + rate;
 			}
-			
+			/*
 			gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
-			gl.bufferSubData( gl.ARRAY_BUFFER, 0, new Float32Array( circleData ), 0, Math.round( NUM_OF_CIRCLES * 3 * CIRC_SIZE ) );
+			gl.bufferSubData( gl.ARRAY_BUFFER, 0, new Float32Array( circleData ), 0, Math.round( NUM_OF_CIRCLES * 3 * CIRC_SIZE ) );*/
 			
 			render();
 		}
+
+		this.mousemove = () => {
+			if ( mx
+		};
 		
 		this.resize = () => {
 			gl.useProgram( program );
 			gl.uniform2f( Uresolution, canvas.width, canvas.height );
 			
-			
+			// Scale circles accordingly
 		};
 	} )();
 	
@@ -420,6 +473,8 @@ const fn = () => {
 		mx = e.clientX / cw - 1;
 		my = -e.clientY / ch + 1;
 		window.onmousemove = null;
+
+		circles.
 	};
 	
 	tPrev = performance.now();
