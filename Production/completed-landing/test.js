@@ -9,7 +9,6 @@ const fn = () => {
 	if ( gl === undefined ) console.err( "Your browser does not suppport WebGL2 (WebGL1 won't work)." );
 	if ( image === undefined ) console.err( "Problem loading image." );
 
-	// initial resize before we do anything
 	canvas.width = window.innerWidth;
 	canvas.height = window.innerHeight;
 	
@@ -23,11 +22,10 @@ const fn = () => {
 	let my = -1;
 	
 	gl.viewport( 0, 0, canvas.width, canvas.height );
-	gl.clearColor( 0.0, 0.0, 0.0, 0.0 );
+	gl.clearColor( 0.1, 0.1, 0.1, 1.0 );
 	gl.clearDepth( 1.0 );					// Clear everything
-	gl.enable( gl.BLEND );					// Enable bLENDING
-	gl.disable( gl.DEPTH_TEST );
-	gl.blendFunc( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA );
+	gl.enable( gl.DEPTH_TEST );				// Enable depth testing
+	gl.depthFunc( gl.LEQUAL );				// Near things obscure far things
 
 	const compile_shader = ( src, type ) => {
 		let ret = gl.createShader( type );
@@ -62,33 +60,6 @@ const fn = () => {
 			console.error( "a program did not link: " + gl.getProgramInfoLog( ret ) );
 	};
 	
-	const fbs = {
-		"fb1" : gl.createFramebuffer(),
-		"tx1" : gl.createTexture(),
-		"fb2" : gl.createFramebuffer(),
-		"tx2" : gl.createTexture()
-	};
-	
-	const size_fbs = () => {
-		gl.activeTexture( gl.TEXTURE0 );
-		gl.bindTexture( gl.TEXTURE_2D, fbs.tx1 );
-		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
-		
-		gl.bindFramebuffer( gl.FRAMEBUFFER, fbs.fb1 );
-		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbs.tx1, 0 );
-		
-		gl.activeTexture( gl.TEXTURE2 );
-		gl.bindTexture( gl.TEXTURE_2D, fbs.tx2 );
-		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
-		
-		gl.bindFramebuffer( gl.FRAMEBUFFER, fbs.fb2 );
-		gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fbs.tx2, 0 );
-	}
-
 	const circles = new ( function () {
 		const vs = `
 			attribute float vertexNum;
@@ -112,7 +83,7 @@ const fn = () => {
 			void main () {
 				vec2 mask = vec2( sign( ( vertexNum - 1.5 ) / 2.0 ), sign( ( mod( vertexNum, 2.0 ) - 0.5 ) ) );
 				vec2 cen = ( Acenter - Uresolution / 2. );
-				float scaling = 1. + 2.0 / ( 1. + pow( 1.005, max( min( Uresolution.x - 100., Uresolution.y - 100. ), 0. ) ) );
+				float scaling = 1.;// + 2. / ( 1. + pow( 1.01, max( min( Uresolution.x - 100., Uresolution.y - 100. ), 0. ) ) );
 				vec2 pos = ( AR.x * scaling * mask + cen ) / Uresolution * 2.;
 
 				gl_Position = vec4( pos, 0., 1. );
@@ -145,49 +116,51 @@ const fn = () => {
 				vec2 R2 = VR * VR;
 				vec2 diff = gl_FragCoord.xy - Vcenter;
 				float dist = dot( diff, diff );
-				float alpha = 0.;
+				
+				/*
+					CHANGE THIS WAY OF DOING THINGS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+					YOU CAN DO THIS WITH MATRIX MATH.
+				*/
+				float theta = atan( -diff.y, -diff.x ) + PI;
 				
 				#ifdef GL_OES_standard_derivatives
 				float delta = fwidth( dist );
 				delta = delta < 1. ? 1. : delta;
+				discard;
 				#else
 				float delta = 2. * VR.x;
 				#endif
-				
-				// Fixed hole-in-the-circle problem, may make this better later.
-				if ( dist < R2.x - delta && R2.y == 0. ) {
-					alpha = 1.;
-				} else {
-					/*
-						CHANGE THIS WAY OF DOING THINGS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-						YOU CAN DO THIS WITH MATRIX MATH.
-					*/
-					float theta = atan( -diff.y, -diff.x ) + PI;
 
-					float deltaT = 0.015;
-					alpha = 1.0 - smoothstep( R2.x - delta, R2.x + delta, dist )
+				float deltaT = 0.015;
+				float alpha = 1.0 - smoothstep( R2.x - delta, R2.x + delta, dist )
 								- smoothstep( R2.y + delta, R2.y - delta, dist );
 
-					if ( Vang2 <= TUPI ) {
-						if ( Vang2 > Vang1 ) {
-							alpha = alpha - smoothstep( Vang1 + deltaT, Vang1 - deltaT, theta )
-										- smoothstep( Vang2 - deltaT, Vang2 + deltaT, theta );
+				if ( Vang2 <= TUPI ) {
+					if ( Vang2 > Vang1 ) {
+						alpha = alpha - smoothstep( Vang1 + deltaT, Vang1 - deltaT, theta )
+									- smoothstep( Vang2 - deltaT, Vang2 + deltaT, theta );
+					} else {
+						if ( theta > Vang2 + deltaT ) {
+							alpha = alpha - smoothstep( Vang1 + deltaT, Vang1 - deltaT, theta );
 						} else {
-							if ( theta > Vang2 + deltaT ) {
-								alpha = alpha - smoothstep( Vang1 + deltaT, Vang1 - deltaT, theta );
-							} else {
-								alpha = alpha - smoothstep( Vang2 - deltaT, Vang2 + deltaT, theta );
-							}
+							alpha = alpha - smoothstep( Vang2 - deltaT, Vang2 + deltaT, theta );
 						}
 					}
-					
-					alpha = clamp( alpha, 0., 1. );
-
-					if ( alpha == 0. )
-						discard;
 				}
 				
-				gl_FragColor = vec4( Vcolor.rgb, Vcolor.a * alpha );
+				// Fixed hole-in-the-circle problem, may make this better later.
+				if ( dist < R2.x - delta && R2.y == 0. )
+					alpha = 1.;
+				
+				alpha = clamp( alpha, 0., 5. );
+
+				if ( alpha == 0. )
+					discard;
+				
+				// frame buffer???
+				vec4 bkgd = vec4( vec3( 0.1 ), 1. );
+				gl_FragColor = mix( bkgd, Vcolor, alpha );
+// 				gl_FragColor = vec4( vec3( 1.0 ), 1. );
 			}
 		`;
 
@@ -221,19 +194,19 @@ const fn = () => {
 		const CIRCLES_SIZE = 7;
 		
 		let circleData = [];
-		this.circles = [];
+		let circles = [];
 		
-		const colorCenter = [ 0.745, 0.960, 0.976, 1 ];
-		const colorSides = [ 0.745, 0.960, 0.976, 1 ];
+		const colorCenter = [ .9, .9, .9, 1 ];
+		const colorSides = [ 0, 1, 0, 1 ];
 
 		const createCircle = ( cx, cy, r, spin, angle_offset ) => {
-			this.circles.push( cx );
-			this.circles.push( cy );
-			this.circles.push( spin );
-			this.circles.push( r );
-			this.circles.push( r );	// r goal radius
-			this.circles.push( 0 );	// r'
-			this.circles.push( spin );	// spin goal
+			circles.push( cx );
+			circles.push( cy );
+			circles.push( spin );
+			circles.push( r );
+			circles.push( r );	// r goal radius
+			circles.push( 0 );	// r'
+			circles.push( spin );	// spin goal
 			let ang1 = angle_offset + Math.PI > Math.PI * 2 ? angle_offset - Math.PI : angle_offset + Math.PI;
 			let ang2 = angle_offset + Math.PI * 1.7 > Math.PI * 2 ? angle_offset - Math.PI * 0.3 : angle_offset + Math.PI * 1.7;
 			let ang3 = angle_offset + Math.PI * 0.7 > Math.PI * 2 ? angle_offset - Math.PI * 1.3 : angle_offset + Math.PI * 0.7;
@@ -246,13 +219,13 @@ const fn = () => {
 		};
 
 		const updateCircle/*s?*/ = ( index ) => {
-			const cx = this.circles[ index * CIRCLES_SIZE + 0 ];
-			const cy = this.circles[ index * CIRCLES_SIZE + 1 ];
-			let spin = this.circles[ index * CIRCLES_SIZE + 2 ];
-			let r = this.circles[ index * CIRCLES_SIZE + 3 ];
-			const r_goal = this.circles[ index * CIRCLES_SIZE + 4 ];
-			let r_p = this.circles[ index * CIRCLES_SIZE + 5 ];
-			let spin_goal = this.circles[ index * CIRCLES_SIZE + 6 ];
+			const cx = circles[ index * CIRCLES_SIZE + 0 ];
+			const cy = circles[ index * CIRCLES_SIZE + 1 ];
+			let spin = circles[ index * CIRCLES_SIZE + 2 ];
+			let r = circles[ index * CIRCLES_SIZE + 3 ];
+			const r_goal = circles[ index * CIRCLES_SIZE + 4 ];
+			let r_p = circles[ index * CIRCLES_SIZE + 5 ];
+			let spin_goal = circles[ index * CIRCLES_SIZE + 6 ];
 			
 			const k_r = 0.00002;
 			const damp = 0.04;
@@ -294,10 +267,10 @@ const fn = () => {
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 2 ] = r;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 3 ] = r * 0.9;
 			
-			this.circles[ index * CIRCLES_SIZE + 5 ] = r_p;
-			this.circles[ index * CIRCLES_SIZE + 3 ] = r;
-			this.circles[ index * CIRCLES_SIZE + 2 ] = spin;
-			this.circles[ index * CIRCLES_SIZE + 6 ] = spin_goal;
+			circles[ index * CIRCLES_SIZE + 5 ] = r_p;
+			circles[ index * CIRCLES_SIZE + 3 ] = r;
+			circles[ index * CIRCLES_SIZE + 2 ] = spin;
+			circles[ index * CIRCLES_SIZE + 6 ] = spin_goal;
 
 			const one = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 4 ];
 			const two = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 5 ];
@@ -369,8 +342,8 @@ const fn = () => {
 					error += relu( PAD - cx ) + relu( cx - ( canvas.width - PAD ) ) + relu( PAD - cy ) + relu( cy - ( canvas.height - PAD ) );
 					
 					for ( let j = 0; j < i; j++ ) {
-						let x = cx - this.circles[ j * CIRCLES_SIZE ];
-						let y = cy - this.circles[ j * CIRCLES_SIZE + 1 ];
+						let x = cx - circles[ j * CIRCLES_SIZE ];
+						let y = cy - circles[ j * CIRCLES_SIZE + 1 ];
 						let squ = x * x + y * y;
 						error += relu( DIST * DIST - squ );
 					}
@@ -408,7 +381,7 @@ const fn = () => {
 		}
 			
 		console.log( circleData );
-		console.log( this.circles );
+		console.log( circles );
 		
 		const arcBuffer = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
@@ -432,17 +405,13 @@ const fn = () => {
 			gl.vertexAttribPointer( Aang2, 1, gl.FLOAT, false, 10 * 4, 5 * 4 );
 			gl.vertexAttribPointer( Acolor, 4, gl.FLOAT, false, 10 * 4, 6 * 4 );
 			
-			gl.vertexAttribDivisor( Acenter, 1 );
-			gl.vertexAttribDivisor( AR, 1 );
-			gl.vertexAttribDivisor( Aang1, 1 );
-			gl.vertexAttribDivisor( Aang2, 1 );
-			gl.vertexAttribDivisor( Acolor, 1 );
-			
-			gl.bindFramebuffer( gl.FRAMEBUFFER, fbs.fb1 );
+// 			gl.vertexAttribDivisor( Acenter, 1 );
+// 			gl.vertexAttribDivisor( AR, 1 );
+// 			gl.vertexAttribDivisor( Aang1, 1 );
+// 			gl.vertexAttribDivisor( Aang2, 1 );
+// 			gl.vertexAttribDivisor( Acolor, 1 );
 			
 			gl.drawArraysInstanced( gl.TRIANGLE_STRIP, 0, 4, 3 * NUM_OF_CIRCLES );
-			
-			gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 			
 			gl.disableVertexAttribArray( vertexNum );
 			gl.disableVertexAttribArray( Acenter );
@@ -466,23 +435,31 @@ const fn = () => {
 		}
 
 		this.mousemove = ( mouse_x, mouse_y ) => {
+// 			let magic = -1;
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
-				const cx = this.circles[ i * CIRCLES_SIZE + 0 ];
-				const cy = this.circles[ i * CIRCLES_SIZE + 1 ];
-				const r = this.circles[ i * CIRCLES_SIZE + 3 ];
+				const cx = circles[ i * CIRCLES_SIZE + 0 ];
+				const cy = circles[ i * CIRCLES_SIZE + 1 ];
+				const r = circles[ i * CIRCLES_SIZE + 3 ];
 				
 				const adj_x = mouse_x - cx;
 				const adj_y = mouse_y - cy;
 				
+// 				console.log( 'mx : ' + mouse_x + ', my : ' + mouse_y );
+// 				console.log( 'cx : ' + cx + ', cy : ' + cy + ', r : ' + r );
+				
 				if ( adj_x * adj_x + adj_y * adj_y <= r * r ) {
-					this.circles[ i * CIRCLES_SIZE + 4 ] = EXP_R;
-					if ( this.circles[ i * CIRCLES_SIZE + 6 ] != OVER_SPIN_RATE )
-						this.circles[ i * CIRCLES_SIZE + 6 ] = SPINNY_SPIN_RATE;
+// 					magic = i;
+					circles[ i * CIRCLES_SIZE + 4 ] = EXP_R;
+					if ( circles[ i * CIRCLES_SIZE + 6 ] != OVER_SPIN_RATE )
+						circles[ i * CIRCLES_SIZE + 6 ] = SPINNY_SPIN_RATE;
 				} else {
-					this.circles[ i * CIRCLES_SIZE + 4 ] = REST_R;
-					this.circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
+					circles[ i * CIRCLES_SIZE + 4 ] = REST_R;
+					circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
 				}
 			}
+			
+// 			if ( magic == -1 ) console.log( 'no' );
+// 			else console.warn( 'yES! magic: ' +  magic );
 		};
 		
 		this.resize = ( ow, oh ) => {
@@ -498,11 +475,11 @@ const fn = () => {
 			const h_ratio = canvas.height / oh;
 			
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
-				this.circles[ i * CIRCLES_SIZE + 0 ] *= w_ratio;
-				this.circles[ i * CIRCLES_SIZE + 1 ] *= h_ratio;
+				circles[ i * CIRCLES_SIZE + 0 ] *= w_ratio;
+				circles[ i * CIRCLES_SIZE + 1 ] *= h_ratio;
 			}
 			
-			// update the circles' radii
+			// update the circle's radius
 			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 		};
 	} )();
@@ -523,24 +500,15 @@ const fn = () => {
 		`;
 
 		const fs = `
-			precision mediump float;
+			precision mediump float;	
 			uniform sampler2D UtexBk;
 			varying vec2 VtexBk;	
 			uniform sampler2D UtexFg;
 			varying vec2 VtexFg;
 			
-			vec4 accurate_mix ( vec4 bk, vec4 fg ) {
-				float alpha = 1.0 - fg.a;
-				
-				vec3 color = sqrt( fg.rgb * fg.rgb + bk.rgb * bk.rgb * alpha );
-				
-				float out_alpha = fg.a + bk.a * alpha;
-				return vec4( color, out_alpha );
-			}
-			
 			void main() {
-				vec4 final_color = accurate_mix( texture2D( UtexBk, VtexBk ), texture2D( UtexFg, VtexFg ) );
-				gl_FragColor = vec4( final_color.rgb, 1.0 );
+				vec4 fg_color = texture2D( UtexFg, VtexFg );
+				gl_FragColor = mix( texture2D( UtexBk, VtexBk ), fg_color, fg_color.a );
 			}
 		`;
 		
@@ -553,7 +521,7 @@ const fn = () => {
 		const Afg = gl.getAttribLocation( program, "AtexFg" );
 		const Ufg = gl.getUniformLocation( program, "UtexFg" );
 
-		gl.activeTexture( gl.TEXTURE1 );
+		gl.activeTexture( gl.TEXTURE0 );
 		const tex_bk = gl.createTexture();
 		
 		gl.bindTexture( gl.TEXTURE_2D, tex_bk );
@@ -561,11 +529,17 @@ const fn = () => {
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
 		
-		gl.uniform1i( Ubk, 1 );
+		gl.uniform1i( Ubk, 0 );
 		
-		gl.activeTexture( gl.TEXTURE0 );
-		gl.bindTexture( gl.TEXTURE_2D, fbs.tx1 );
-		gl.uniform1i( Ufg, 0 );
+		gl.activeTexture( gl.TEXTURE1 );
+		const tex_fg = gl.createTexture();
+		
+		gl.bindTexture( gl.TEXTURE_2D, tex_fg );
+		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image2 );
+		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
+		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
+		
+		gl.uniform1i( Ufg, 1 );
 		
 		const extra_scale = 0.1;
 		
@@ -586,10 +560,10 @@ const fn = () => {
 		
 		const fg_buf = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, fg_buf );
-		gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ 0, 0,
-															0, 1,
-															1, 0,
-															1, 1 ] ), gl.STATIC_DRAW );
+		gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ 0, 1,
+															0, 0,
+															1, 1,
+															1, 0 ] ), gl.STATIC_DRAW );
 		
 		const render = () => {
 			gl.enableVertexAttribArray( Apos );
@@ -604,12 +578,6 @@ const fn = () => {
 			
 			gl.bindBuffer( gl.ARRAY_BUFFER, fg_buf );
 			gl.vertexAttribPointer( Afg, 2, gl.FLOAT, false, 0, 0 );
-			
-			gl.vertexAttribDivisor( Apos, 0 );
-			gl.vertexAttribDivisor( Abk, 0 );
-			gl.vertexAttribDivisor( Afg, 0 );
-			
-			gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 			
 			gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
 			
@@ -653,12 +621,8 @@ const fn = () => {
 		canvas.height = window.innerHeight;
 		cw = canvas.width / 2;
 		ch = canvas.height / 2;
-		
-		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 		gl.viewport( 0, 0, canvas.width, canvas.height );
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-
-		size_fbs();
 		
 		circles.resize( canvw, canvh );
 		bkgd.resize();
@@ -669,13 +633,7 @@ const fn = () => {
 	
 	const animate = ( tNow ) => {
 		tDelta = tNow - tPrev;
-		
-		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-		gl.bindFramebuffer( gl.FRAMEBUFFER, fbs.fb1 );
-		gl.clear( gl.COLOR_BUFFER_BIT );
-		gl.bindFramebuffer( gl.FRAMEBUFFER, fbs.fb2 );
-		gl.clear( gl.COLOR_BUFFER_BIT );
 		
 // 		console.log( tDelta );
 		
@@ -694,12 +652,6 @@ const fn = () => {
 
 		circles.mousemove( e.clientX, canvas.height - e.clientY );
 	};
-	
-// 	const mouseout = ( e ) => {
-// 		mx = 0;
-// 		my = 0;
-// 		window.onmousemove = null;
-// 	};
 	
 	tPrev = performance.now();
 	requestAnimationFrame( animate );
