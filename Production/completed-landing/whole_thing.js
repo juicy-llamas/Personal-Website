@@ -112,6 +112,10 @@ const fn = () => {
 	}
 
 	const circles = new ( function () {
+
+		// When true, means we have clicked on a circle link and thus 'selected' that circle, so we are out of nav mode. This disables things like circles.mousemove and circles.reset.
+		let SELECTED_STATE = false;
+
 		// Vertex shader
 		const vs = `
 			attribute float vertexNum;
@@ -233,32 +237,37 @@ const fn = () => {
 		const vertexBuffer = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, vertexBuffer );
 		gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ 0, 1, 2, 3 ] ), gl.STATIC_DRAW );
-		
+
+		// Number of circles on screen
 		const NUM_OF_CIRCLES = 5;
 		
+		// Defines spin rates (resting is initial, when you first move your mouse over a circle it speeds up to spinny, and when it hits SPINNY_SPIN_RATE - SPIN_TOLERANCE or above, it drops down to OVER_SPIN_RATE.
 		const RESTING_SPIN_RATE = .2;
 		const SPINNY_SPIN_RATE = 20;
 		const OVER_SPIN_RATE = 0;
 		const SPIN_TOLERANCE = 0.01;
 		
+		// Elements per circle of WebGL buffer array (circleData)
 		const CIRC_SIZE = 10;
+		// Elements per circle of general circle bookeeping array (this.circles)
 		const CIRCLES_SIZE = 8;
 		
 		let circleData = [];
 		this.circles = [];
 		
-		const colorCenter = [ 0.745, 0.960, 0.976, 1 ];
-		const colorSides = [ 0.745, 0.960, 0.976, 1 ];
+		const colorCenter = [ 0.745, 0.960, 0.976, 0.8 ];
+		const colorSides = [ 0.745, 0.960, 0.976, 0.8 ];
 
-		const green = [ 0, 1, 0, 1 ];
-		const blue = [ 0, 0, 1, 1 ];
-		const red = [ 1, 0, 0, 1 ];
-		const cyan= [ 0, 1, 1, 1 ];
-		const yellow = [ 1, 1, 0, 1 ];
-		const arr_of_colors = [ green, blue, red, cyan, yellow ];
+// 		const green = [ 0, 1, 0, 1 ];
+// 		const blue = [ 0, 0, 1, 1 ];
+// 		const red = [ 1, 0, 0, 1 ];
+// 		const cyan= [ 0, 1, 1, 1 ];
+// 		const yellow = [ 1, 1, 0, 1 ];
+// 		const arr_of_colors = [ green, blue, red, cyan, yellow ];
 
-		let tempBookeeping = 0;
+// 		let tempBookeeping = 0;
 		const createCircle = ( cx, cy, r, spin, angle_offset ) => {
+			// Push the various attributes to the array.
 			this.circles.push( cx );
 			this.circles.push( cy );
 			this.circles.push( spin );
@@ -272,39 +281,41 @@ const fn = () => {
 			let ang2 = angle_offset + Math.PI * 1.7 > Math.PI * 2 ? angle_offset - Math.PI * 0.3 : angle_offset + Math.PI * 1.7;
 			let ang3 = angle_offset + Math.PI * 0.7 > Math.PI * 2 ? angle_offset - Math.PI * 1.3 : angle_offset + Math.PI * 0.7;
 			
-// 			circleData = [ ...circleData,
-// 				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , ...colorCenter,
-// 				cx, cy, r, r * 0.9, ang1, ang2, ...colorSides,
-// 				cx, cy, r, r * 0.9, angle_offset, ang3, ...colorSides,
-// 			];
-
+			// Assign initial parameters. This is necessary since I don't set the color anywhere else.
 			circleData = [ ...circleData,
-				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , ...( arr_of_colors[ tempBookeeping ] ),
-				cx, cy, r, r * 0.9, ang1, ang2, ...( arr_of_colors[ tempBookeeping ] ),
-				cx, cy, r, r * 0.9, angle_offset, ang3, ...( arr_of_colors[ tempBookeeping ] ),
+				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , ...colorCenter,
+				cx, cy, r, r * 0.9, ang1, ang2, ...colorSides,
+				cx, cy, r, r * 0.9, angle_offset, ang3, ...colorSides,
 			];
 
-			let circ_color = 'undefined';
-			switch ( tempBookeeping ) {
-				case 0:
-					circ_color = 'green';
-					break;
-				case 1:
-					circ_color = 'blue';
-					break;
-				case 2:
-					circ_color = 'red';
-					break;
-				case 3:
-					circ_color = 'cyan';
-					break;
-				case 4:
-					circ_color = 'yellow';
-					break;
-			}
-			console.error( circ_color + ' circle: ( ' + cx + ', ' + cy + ' )' );
-
-			tempBookeeping += 1;
+// Identifies the circles distinctly for debugging...
+// 			circleData = [ ...circleData,
+// 				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , ...( arr_of_colors[ tempBookeeping ] ),
+// 				cx, cy, r, r * 0.9, ang1, ang2, ...( arr_of_colors[ tempBookeeping ] ),
+// 				cx, cy, r, r * 0.9, angle_offset, ang3, ...( arr_of_colors[ tempBookeeping ] ),
+// 			];
+//
+// 			let circ_color = 'undefined';
+// 			switch ( tempBookeeping ) {
+// 				case 0:
+// 					circ_color = 'green';
+// 					break;
+// 				case 1:
+// 					circ_color = 'blue';
+// 					break;
+// 				case 2:
+// 					circ_color = 'red';
+// 					break;
+// 				case 3:
+// 					circ_color = 'cyan';
+// 					break;
+// 				case 4:
+// 					circ_color = 'yellow';
+// 					break;
+// 			}
+// 			console.error( circ_color + ' circle: ( ' + cx + ', ' + cy + ' )' );
+//
+// 			tempBookeeping += 1;
 		};
 
 		const updateCircle/*s?*/ = ( index ) => {
@@ -325,7 +336,8 @@ const fn = () => {
 			r_p = r_p + ( r_pp ) * tDelta - r_p * damp;
 			r = r + r_p * tDelta;
 
-			// If we zero the radius when naving, we want it to stay that way.
+			// If the radius is set to zero, it will go to zero and then come back and oscillate for a while due to the spring equation.
+			// The 'zeroed' variable makes sure that if the radius is set to zero when naving, it does not bounce up (I just thought that looked really weird and didn't much care for it).
 			if ( zeroed === true && r <= 0 ) {
 				r_p = 0;
 				r = 0;
@@ -547,7 +559,8 @@ const fn = () => {
 
 		// This controls the circle mouse over effect.
 		this.mousemove = ( mouse_x, mouse_y ) => {
-			if ( CIRC_MOUSEMOVE === true )
+			// Don't process event in selected state
+			if ( SELECTED_STATE === false ) {
 				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 					const cx = this.circles[ i * CIRCLES_SIZE + 0 ];
 					const cy = this.circles[ i * CIRCLES_SIZE + 1 ];
@@ -599,39 +612,56 @@ const fn = () => {
 
 		// Sets the circles' r and spin to their original defaults.
 		this.reset = ( pageLeave ) => {
-			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
-				// Set r_goal and spin_goal to start.
-				this.circles[ i * CIRCLES_SIZE + 4 ] = REST_R;
-				this.circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
-				// Set r and spin to goal and r' to zero. This will stop any current motion and is used when leaving the page.
-				if ( pageLeave === true ) {
-					this.circles[ i * CIRCLES_SIZE + 5 ] = 0;
-					this.circles[ i * CIRCLES_SIZE + 2 ] = RESTING_SPIN_RATE;
-					this.circles[ i * CIRCLES_SIZE + 3 ] = REST_R;
+			// Don't process event in selected state
+			if ( SELECTED_STATE === false ) {
+				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
+					// Set r_goal and spin_goal to start.
+					this.circles[ i * CIRCLES_SIZE + 4 ] = REST_R;
+					this.circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
+					// Set r and spin to goal and r' to zero. This will stop any current motion and is used when leaving the page.
+					if ( pageLeave === true ) {
+						this.circles[ i * CIRCLES_SIZE + 5 ] = 0;
+						this.circles[ i * CIRCLES_SIZE + 2 ] = RESTING_SPIN_RATE;
+						this.circles[ i * CIRCLES_SIZE + 3 ] = REST_R;
+					}
 				}
+			} else {
+
 			}
 		}
 
-		// Makes
-		const navto = ( index ) => {
+		// Focuses on one circle (specifically the circle at the offset 'index'.
+		const select = ( index ) => {
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 				const cx = this.circles[ i * CIRCLES_SIZE + 0 ];
 				const cy = this.circles[ i * CIRCLES_SIZE + 1 ];
+				// If it's the focus circle...
 				if ( i === index ) {
+					// Get the radius the circle should be and set it.
 					const max_x = canvas.width + Math.abs( cx - cw );
 					const max_y = canvas.height + Math.abs( cy - ch );
 					this.circles[ i * CIRCLES_SIZE + 4 ] = 1.1 * Math.sqrt( max_x * max_x + max_y * max_y );
-					this.circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
+					// Why not?
+					this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
 				} else {
+					// Otherwise, zero the radius / spin and set the circle as 'zeroed' (see updateCircle).
 					this.circles[ i * CIRCLES_SIZE + 4 ] = 0;
 					this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
 					this.circles[ i * CIRCLES_SIZE + 7 ] = true;
 				}
 			}
+
+			// Disable mouse movement
+			SELECTED_STATE = index;
 		}
 
 		// Click event for circles.
 		this.click = ( mouse_x, mouse_y ) => {
+			// SELECTED_STATE should not be true if this function is called.
+			if ( SELECTED_STATE !== false ) {
+				console.error( "circles.click should not be called when a circle is already selected." );
+			}
+
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 				const cx = this.circles[ i * CIRCLES_SIZE + 0 ];
 				const cy = this.circles[ i * CIRCLES_SIZE + 1 ];
@@ -643,12 +673,19 @@ const fn = () => {
 				// If the pointer is in the radius of a circle
 				if ( adj_x * adj_x + adj_y * adj_y <= r * r ) {
 					// Then do the navigation animation and return the index of the clicked circle.
-					navto( i );
+					select( i );
 					return i;
 				}
 			}
 			// -1 means no clicked circles.
 			return -1;
+		}
+
+		// Resets the nav.
+		this.deselect = () => {
+			SELECTED_STATE = false;
+			this.reset();
+			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 		}
 	} )();
 	
@@ -858,7 +895,7 @@ const fn = () => {
 		circles.reset( true );
 	};
 
-	const click = ( e ) => {
+	const click_select = ( e ) => {
 		const nav_to = circles.click( e.clientX, canvas.height - e.clientY );
 
 		switch ( nav_to ) {
@@ -878,6 +915,19 @@ const fn = () => {
 				console.error( 'invalid case' );
 				return;
 		}
+
+		canvas.onclick = undefined;
+		// Here we should set the back arrow image onclick to be click_deselect, but instead we will set it to the canvas as a default.
+		canvas.onclick = click_deselect;
+
+		// Do other stuff here...
+	};
+
+	const click_deselect = ( e ) => {
+		circles.deselect();
+		canvas.onclick = click_select;
+
+		// Do other stuff here...
 	};
 
 	resize();
@@ -885,7 +935,7 @@ const fn = () => {
 	window.onbeforeunload = leavepage;
 	window.pagehide = leavepage;
 	window.addEventListener( 'visibilitychange', ( e ) => { if ( document.visibilityState === 'hidden' ) leavepage( e ); else animFrame = requestAnimationFrame( animate ); } );
-	canvas.onclick = click
+	canvas.onclick = click_select;
 	
 	tPrev = performance.now();
 	animFrame = requestAnimationFrame( animate );
