@@ -397,7 +397,7 @@ const fn = () => {
 			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 5 ] = two + rate >= 2 * Math.PI ? two + rate - 2 * Math.PI : two + rate;
 			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 4 ] = thr + rate >= 2 * Math.PI ? thr + rate - 2 * Math.PI : thr + rate;
 			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 5 ] = fou + rate >= 2 * Math.PI ? fou + rate - 2 * Math.PI : fou + rate;
-		}
+		};
 
 		// I'm not sure if the circles will be usable on a smaller screen, so I leave this warning.
 		if ( canvas.width < 1920 / 2 || canvas.height < 1080 / 2 )
@@ -446,10 +446,8 @@ const fn = () => {
 				let bestError = 50000000; // a big number
 				
 				const check = () => {
-					let error = 0;
 					const relu = ( x ) => x > 0 ? x : 0;
-					
-					error += relu( PAD - cx ) + relu( cx - ( canvas.width - PAD ) ) + relu( PAD - cy ) + relu( cy - ( canvas.height - PAD ) );
+					let error = relu( PAD - cx ) + relu( cx - ( canvas.width - PAD ) ) + relu( PAD - cy ) + relu( cy - ( canvas.height - PAD ) );
 					
 					for ( let j = 0; j < i; j++ ) {
 						let x = cx - this.circles[ j * CIRCLES_SIZE ];
@@ -555,7 +553,7 @@ const fn = () => {
 
 			// Render the scene to the framebuffer.
 			render();
-		}
+		};
 
 		// This controls the circle mouse over effect.
 		this.mousemove = ( mouse_x, mouse_y ) => {
@@ -628,7 +626,7 @@ const fn = () => {
 			} else {
 
 			}
-		}
+		};
 
 		// Focuses on one circle (specifically the circle at the offset 'index'.
 		const select = ( index ) => {
@@ -637,12 +635,15 @@ const fn = () => {
 				const cy = this.circles[ i * CIRCLES_SIZE + 1 ];
 				// If it's the focus circle...
 				if ( i === index ) {
-					// Get the radius the circle should be and set it.
-					const max_x = canvas.width + Math.abs( cx - cw );
-					const max_y = canvas.height + Math.abs( cy - ch );
-					this.circles[ i * CIRCLES_SIZE + 4 ] = 1.1 * Math.sqrt( max_x * max_x + max_y * max_y );
-					// Why not?
-					this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
+					// We want the circles to shrink before we expand the big circle.
+					setTimeout( () => {
+						// Get the radius the circle should be and set it.
+						const max_x = canvas.width + Math.abs( cx - cw );
+						const max_y = canvas.height + Math.abs( cy - ch );
+						this.circles[ i * CIRCLES_SIZE + 4 ] = 1.1 * Math.sqrt( max_x * max_x + max_y * max_y );
+						// Why not?
+						this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
+					}, 300 );
 				} else {
 					// Otherwise, zero the radius / spin and set the circle as 'zeroed' (see updateCircle).
 					this.circles[ i * CIRCLES_SIZE + 4 ] = 0;
@@ -653,7 +654,7 @@ const fn = () => {
 
 			// Disable mouse movement
 			SELECTED_STATE = index;
-		}
+		};
 
 		// Click event for circles.
 		this.click = ( mouse_x, mouse_y ) => {
@@ -679,14 +680,14 @@ const fn = () => {
 			}
 			// -1 means no clicked circles.
 			return -1;
-		}
+		};
 
 		// Resets the nav.
 		this.deselect = () => {
 			SELECTED_STATE = false;
 			this.reset();
 			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
-		}
+		};
 	} )();
 	
 	const bkgd = new ( function () {
@@ -714,6 +715,7 @@ const fn = () => {
 			vec4 accurate_mix ( vec4 bk, vec4 fg ) {
 				float alpha = 1.0 - fg.a;
 				
+				// Gamma correction of 2, close enough to 2.2 or whatever the ideal ratio is.
 				vec3 color = sqrt( fg.rgb * fg.rgb + bk.rgb * bk.rgb * alpha );
 				
 				float out_alpha = fg.a + bk.a * alpha;
@@ -831,6 +833,108 @@ const fn = () => {
 		};
 		
 	} )();
+
+	// Control logic for the back arrow and it's animations.
+	const arrow = new ( function () {
+		// Opacity binds for back arrow.
+		const OPACITY_REST = 0.6;
+		const OPACITY_OVER = 1;
+		// An array of arrays of elements that form 'pages'.
+		// When we click on a circle (one of the five, right now), we will display and fade in all of the elements in the array.
+		// When we click on the back arrow, we will fade out all of them, and then set them to 'display:none;' with a setTimeout call.
+		const DOCUMENTS = [
+			[],
+			[],
+			[],
+			[],
+			[]
+		];
+		// Arrow object (is constant for every document)
+		const arrow_obj = document.getElementById( "back-arrow" );
+
+		// Chosen document
+		let chosen_one = [];
+		let last_index = -1;
+		let chosen_timeouts = [];
+		// Opacity variables for arrow object (yes it has it's own spring).
+		let current_opacity = 0;
+		let opacity_pp = 0;
+		let opacity_p = 0;
+		let goal_opacity = 0;
+		// There was a bug with the setTimeout on the arrow, this should fix it
+		let arrow_timeout = undefined;
+
+		// This function turns off the display and resets the circles.
+		const mouseclick = () => {
+			// Fade out content and back arrow, then remove it from display
+			arrow_obj.onmouseover = undefined;
+			arrow_obj.onmouseout = undefined;
+			arrow_obj.onclick = undefined;
+			goal_opacity = 0;
+			// Note that we put all of the timeouts into a
+			// 1000 here is an arbitrary amount of time so I can tell how long the animation will take to complete.
+			arrow_timeout = setTimeout( () => { arrow_obj.style.display = 'none'; this.update = () => {}; }, 1100 );
+
+			// Enumerate because we need both index and element.
+			for ( [ i, elm ] of chosen_one.entries() ) {
+				elm.className = 'fade_out';
+				// The animation *should* takes 400 ms to complete, so I add an extra 50 ms just to be sure the function is called when it's completed.
+				chosen_timeouts[ i ] = setTimeout( () => { elm.style.display = 'none'; }, 450 );
+			}
+
+			chosen_one = [];
+
+			circles.deselect();
+			canvas.onclick = click_select;
+		};
+
+		// When the user hovers over the arrow, it should increase in opacity.
+		const mouseover = () => { goal_opacity = OPACITY_OVER; };
+		const mouseout = () => { goal_opacity = OPACITY_REST; };
+
+		// This function shows the back arrow, sets up it's animations and events, and then shows the rest of the document that's selected.
+		this.show = ( THE_CHOSEN_DOCUMENT ) => {
+			if ( THE_CHOSEN_DOCUMENT !== -1 ) {
+				// If we have a timeout set to remove the arrow, disable it immediately...
+				clearTimeout( arrow_timeout );
+				// Same goes for the elements (if we clicked off an element and then really quickly clicked back on it again for some reason...)
+				// But ONLY if the elements are the same ones we clicked off of last time, if they are different we do want them to disappear.
+				if ( last_index === THE_CHOSEN_DOCUMENT )
+					for ( elm in chosen_timeouts )
+						clearTimeout( elm );
+
+				// Set up the back arrow
+				arrow_obj.style.display = 'block';
+				arrow_obj.onmouseover = mouseover;
+				arrow_obj.onmouseout = mouseout;
+				arrow_obj.onclick = mouseclick;
+				this.update = live_update;
+				goal_opacity = OPACITY_REST;
+
+				// Show the chosen document.
+				chosen_one = DOCUMENTS[ THE_CHOSEN_DOCUMENT ]; // That's a mouthful...
+				last_index = THE_CHOSEN_DOCUMENT;
+				chosen_timeouts = [];
+				// Loop through each element and set it to fade in.
+				for ( elm in chosen_one ) {
+					elm.style.display = 'block';
+					elm.className = 'fade_in';
+				}
+			}
+		};
+
+		const live_update = () => {
+			const k = 0.000018;
+			const damp = 0.06;
+			opacity_pp = k * ( goal_opacity - current_opacity );
+			opacity_p = opacity_p + opacity_pp * tDelta - opacity_p * damp;
+			current_opacity = current_opacity + opacity_p * tDelta;
+
+			arrow_obj.style.opacity = current_opacity;
+		};
+
+		this.update = () => {};
+	} )();
 	
 	const animate = ( tNow ) => {
 		tDelta = tNow - tPrev;
@@ -844,6 +948,7 @@ const fn = () => {
 		
 		circles.update();
 		bkgd.update();
+		arrow.update();
 		
 		window.onmousemove = mousemove;	
 		animFrame = requestAnimationFrame( animate );
@@ -895,39 +1000,13 @@ const fn = () => {
 		circles.reset( true );
 	};
 
+	// When a circle is clicked
 	const click_select = ( e ) => {
 		const nav_to = circles.click( e.clientX, canvas.height - e.clientY );
-
-		switch ( nav_to ) {
-			case 0:
-				break;
-			case 1:
-				break;
-			case 2:
-				break;
-			case 3:
-				break;
-			case 4:
-				break;
-			case -1:
-				return;
-			default:
-				console.error( 'invalid case' );
-				return;
-		}
-
+		setTimeout( () => {
+			arrow.show( nav_to );
+		}, 600 );
 		canvas.onclick = undefined;
-		// Here we should set the back arrow image onclick to be click_deselect, but instead we will set it to the canvas as a default.
-		canvas.onclick = click_deselect;
-
-		// Do other stuff here...
-	};
-
-	const click_deselect = ( e ) => {
-		circles.deselect();
-		canvas.onclick = click_select;
-
-		// Do other stuff here...
 	};
 
 	resize();
