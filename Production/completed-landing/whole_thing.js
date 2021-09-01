@@ -624,7 +624,8 @@ const fn = () => {
 					}
 				}
 			} else {
-
+				this.circles[ SELECTED_STATE * CIRCLES_SIZE + 3 ] = this.circles[ SELECTED_STATE * CIRCLES_SIZE + 4 ];
+				this.circles[ SELECTED_STATE * CIRCLES_SIZE + 5 ] = 0;
 			}
 		};
 
@@ -750,13 +751,45 @@ const fn = () => {
 		gl.activeTexture( gl.TEXTURE0 );
 		gl.bindTexture( gl.TEXTURE_2D, fbs.tx1 );
 		gl.uniform1i( Ufg, 0 );
-		
+
+		// Resolution of the image, center of the image (where we want the center to be), and the normalized center
+		const res_x = 5105;
+		const res_y = 2871;
+		const center_x = 1275;
+		const center_y = 1419;
+		const rate_x = center_x / res_x;
+		const rate_y = center_y / res_y;
+
+		// Percentage of the shown image to parallax scroll
 		const extra_scale = 0.1;
 		
-		const bk_arr = new Float32Array( [ 1 - extra_scale, 1 - extra_scale,
-										   1 - extra_scale, 0 + extra_scale,
-										   0 + extra_scale, 1 - extra_scale,
-										   0 + extra_scale, 0 + extra_scale ] );
+		// Scaling the image to the width of the screen.
+		let scale_x = Math.min( 1, canvas.width / res_x * 2 );
+		let scale_y = Math.min( 1, canvas.height / res_y * 2 );
+
+		let bk_arr = [];
+
+		{
+			const left_scale = scale_x * rate_x - extra_scale * scale_x;
+			const right_scale = scale_x * ( 1 - rate_x ) - extra_scale * scale_x;
+			const down_scale = scale_y * rate_y - extra_scale * scale_y;
+			const up_scale = scale_y * ( 1 - rate_y ) - extra_scale * scale_y;
+
+			bk_arr = new Float32Array( [
+				rate_x + right_scale, rate_y + up_scale,
+				rate_x + right_scale, rate_y - down_scale,
+				rate_x - left_scale, rate_y + up_scale,
+				rate_x - left_scale, rate_y - down_scale,
+			] );
+		}
+
+// 		const bk_arr = new Float32Array( [
+// 			( 1 - extra_scale ), ( 1 - extra_scale ),
+// 			( 1 - extra_scale ), ( 0 + extra_scale ),
+// 			( 0 + extra_scale ), ( 1 - extra_scale ),
+// 			( 0 + extra_scale ), ( 0 + extra_scale )
+// 		] );
+
 		const pos_buf = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, pos_buf );
 		gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ -1, -1,
@@ -815,8 +848,8 @@ const fn = () => {
 		this.update = () => {
 			gl.useProgram( program );
 				
-			let velx = v_mult * ( mx - this.x / extra_scale );
-			let vely = v_mult * ( my - this.y / extra_scale );
+			let velx = v_mult * ( mx - this.x / extra_scale / scale_x );
+			let vely = v_mult * ( my - this.y / extra_scale / scale_y );
 			
 			this.x += velx * tDelta;
 			this.y += vely * tDelta;
@@ -825,7 +858,10 @@ const fn = () => {
 			render();
 		};
 		
-		this.resize = () => {};
+		this.resize = () => {
+			scale_x = image.naturalWidth / canvas.width;
+			scale_y = image.naturalHeight / canvas.height;
+		};
 
 		this.reset = () => {
 			this.x = 0;
@@ -934,6 +970,13 @@ const fn = () => {
 		};
 
 		this.update = () => {};
+
+		this.reset = () => {
+			goal_opacity = OPACITY_REST;
+			current_opacity = OPACITY_REST;
+			opacity_p = 0;
+			opacity_pp = 0;
+		}
 	} )();
 	
 	const animate = ( tNow ) => {
@@ -997,6 +1040,7 @@ const fn = () => {
 		cancelAnimationFrame( animFrame );
 		mouseout();
 		bkgd.reset();
+		arrow.reset();
 		circles.reset( true );
 	};
 
