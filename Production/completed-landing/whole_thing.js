@@ -264,14 +264,6 @@ const fn = () => {
 		const colorCenter = [ 0.745, 0.960, 0.976, 0.8 ];
 		const colorSides = [ 0.745, 0.960, 0.976, 0.8 ];
 
-// 		const green = [ 0, 1, 0, 1 ];
-// 		const blue = [ 0, 0, 1, 1 ];
-// 		const red = [ 1, 0, 0, 1 ];
-// 		const cyan= [ 0, 1, 1, 1 ];
-// 		const yellow = [ 1, 1, 0, 1 ];
-// 		const arr_of_colors = [ green, blue, red, cyan, yellow ];
-
-// 		let tempBookeeping = 0;
 		const createCircle = ( cx, cy, r, spin, angle_offset, number ) => {
 			// Push the various attributes to the array.
 			this.circles.push( cx );
@@ -286,10 +278,32 @@ const fn = () => {
 			// Text associated with circle.
 			const text = document.getElementById( "circ" + number );
 			this.circles.push( text );
-			text.style.width = 0.5 * r;
-			text.style.height = 0.5 * r;
-			text.style.left = (cx - r / 4) + 'px';
-			text.style.top = (canvas.height - cy - r / 2) + 'px';
+			text.style.width = 0.75 * r;
+			text.style.height = 0.75 * r;
+			switch ( number ) {
+				case 1: // Other Projects
+					text.style.left = (cx - r / 2) + 'px';
+					text.style.top = (canvas.height - cy - r / 2.4) + 'px';
+					break;
+				case 2: // This Site
+					text.style.left = (cx - r / 4) + 'px';
+					text.style.top = (canvas.height - cy - r / 2) + 'px';
+					break;
+				case 3: // About Me
+					text.style.left = (cx - r / 4) + 'px';
+					text.style.top = (canvas.height - cy - r / 2) + 'px';
+					break;
+				case 4: // Contact
+					text.style.left = (cx - r / 4) + 'px';
+					text.style.top = (canvas.height - cy - r / 2) + 'px';
+					break;
+				case 5: // My Blog
+					text.style.left = (cx - r / 4) + 'px';
+					text.style.top = (canvas.height - cy - r / 2) + 'px';
+					break;
+				default:
+					console.error( "createCircle: number is out of bounds. value: " + number );
+			}
 
 			let ang1 = angle_offset + Math.PI > Math.PI * 2 ? angle_offset - Math.PI : angle_offset + Math.PI;
 			let ang2 = angle_offset + Math.PI * 1.7 > Math.PI * 2 ? angle_offset - Math.PI * 0.3 : angle_offset + Math.PI * 1.7;
@@ -301,35 +315,6 @@ const fn = () => {
 				cx, cy, r, r * 0.92, ang1, ang2, ...colorSides,
 				cx, cy, r, r * 0.92, angle_offset, ang3, ...colorSides,
 			];
-
-// Identifies the circles distinctly for debugging...
-// 			circleData = [ ...circleData,
-// 				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , ...( arr_of_colors[ tempBookeeping ] ),
-// 				cx, cy, r, r * 0.9, ang1, ang2, ...( arr_of_colors[ tempBookeeping ] ),
-// 				cx, cy, r, r * 0.9, angle_offset, ang3, ...( arr_of_colors[ tempBookeeping ] ),
-// 			];
-//
-// 			let circ_color = 'undefined';
-// 			switch ( tempBookeeping ) {
-// 				case 0:
-// 					circ_color = 'green';
-// 					break;
-// 				case 1:
-// 					circ_color = 'blue';
-// 					break;
-// 				case 2:
-// 					circ_color = 'red';
-// 					break;
-// 				case 3:
-// 					circ_color = 'cyan';
-// 					break;
-// 				case 4:
-// 					circ_color = 'yellow';
-// 					break;
-// 			}
-// 			console.error( circ_color + ' circle: ( ' + cx + ', ' + cy + ' )' );
-//
-// 			tempBookeeping += 1;
 		};
 
 		const updateCircle/*s?*/ = ( index ) => {
@@ -421,11 +406,12 @@ const fn = () => {
 		
 		// These dictate the placing, distance between, and radius of the circles in resting and expanded states.
 		// They change with a screen resize.
-		let REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.2;
+		let REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.5;
 		let EXP_R = REST_R * 1.3;
-		let PAD = EXP_R + Math.min( cw, ch ) * 0.1;
-		let DIST = Math.max( canvas.width, canvas.height ) * 1.06 / ( NUM_OF_CIRCLES );
+		let PAD = EXP_R * 1.1;
+		let DIST = ( /*Math.max( canvas.width, canvas.height ) * 0.6*/ + EXP_R * 9 ) / ( NUM_OF_CIRCLES );
 		
+		let max_gens = 50;
 		// This places the circles initially
 		// Put in a function to benchmark it.
 		const gen_circles = () => {
@@ -454,7 +440,7 @@ const fn = () => {
 				if ( i == NUM_OF_CIRCLES - 1 )
 					break;
 				
-				let theta = Math.random() * Math.PI;
+				let theta = Math.random() * 2 * Math.PI;
 				let cx = xOrig + DIST * Math.cos( theta );
 				let cy = yOrig + DIST * Math.sin( theta );
 				
@@ -484,7 +470,7 @@ const fn = () => {
 						return false;
 				};
 				
-				const max_atts = 1000;
+				const max_atts = 20;
 				let limit = max_atts;
 				while ( check() && limit > 0 ) {
 					theta = Math.random() * Math.PI + angAdd;
@@ -493,9 +479,14 @@ const fn = () => {
 					limit -= 1;
 				}
 				
-				if ( check() == true ) {
-					cx = bestx;
-					cy = besty;
+				if ( check() ) {
+					if ( max_gens < 0 ) {
+						cx = bestx;
+						cy = besty;
+					} else {
+						max_gens -= 1;
+						gen_circles();
+					}
 				}
 				
 				xOrig = cx;
@@ -609,12 +600,15 @@ const fn = () => {
 			gl.uniform2f( Uresolution, canvas.width, canvas.height );
 			
 			// Next, reset the values for r and the pad / distance (though reseting the pad and distance is not really necessary, I do it anyways in case I do anything more with them in the future).
-			REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.2;
+			REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.5;
 			EXP_R = REST_R * 1.3;
-			PAD = EXP_R + Math.min( cw, ch ) * 0.25;
-			DIST = Math.max( canvas.width, canvas.height ) * 1.1 / ( NUM_OF_CIRCLES );
+			PAD = EXP_R * 0.9;
+			DIST = ( Math.max( canvas.width, canvas.height ) * 1.06 + EXP_R ) / ( NUM_OF_CIRCLES );
 			
-			// Next we grow/shrink the circle center coordinates porportionally to the amount the screen did.
+			// Manually trigger the mouse move event so we can update all of the circles' radii.
+			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
+
+			// Then we grow/shrink the circle center coordinates porportionally to the amount the screen did.
 			const w_ratio = canvas.width / ow;
 			const h_ratio = canvas.height / oh;
 
@@ -623,14 +617,30 @@ const fn = () => {
 				this.circles[ i * CIRCLES_SIZE + 1 ] *= h_ratio;
 				const text = this.circles[ i * CIRCLES_SIZE + 8 ];
 
-				text.style.width = 0.5 * REST_R;
-				text.style.height = 0.5 * REST_R;
-				text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - REST_R / 4) + 'px';
-				text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - REST_R / 2) + 'px';
+				// Also change the text position
+				switch ( i + 1 ) {
+					case 1: // Other Projects
+						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
+						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2.4) + 'px';
+						break;
+					case 2: // This Site
+						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
+						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
+						break;
+					case 3: // About Me
+						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
+						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
+						break;
+					case 4: // Contact
+						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
+						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
+						break;
+					case 5: // My Blog
+						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
+						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
+						break;
+				}
 			}
-			
-			// Finally, manually trigger the mouse move event so we can update all of the circles' radii.
-			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 		};
 
 		// Sets the circles' r and spin to their original defaults.
