@@ -11,13 +11,13 @@
 
 .fade-in {
 	animation-name: fade_in;
-	animation-duration: 0.4s;
+	animation-duration: 0.3s;
 	animation-timing-function: ease;
 }
 
 .fade-out {
 	animation-name: fade_out;
-	animation-duration: 0.4s;
+	animation-duration: 0.3s;
 	animation-timing-function: ease;
 }
 
@@ -71,4 +71,13 @@ body {
 	opacity: .7;
 /* 	Arrow will start off not displaying since nothing's selected.*/
 	display: none;
+}
+
+.circle-text {
+	position: absolute;
+	display: block;
+	text-align: center;
+	font-size: 2em;
+	font-family: sans-serif;
+	pointer-events: none;
 }

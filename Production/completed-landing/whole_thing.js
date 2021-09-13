@@ -48,14 +48,15 @@ const fn = () => {
 		gl.shaderSource( ret, src );
 		gl.compileShader( ret );
 
-		if ( gl.getShaderParameter( ret, gl.COMPILE_STATUS ) )
-			return ret;
-		else {
-			// The error message outputs the type of shader or undefined, this works for my purposes even though I miss others like the geometry shader.
-			const typStr = type === gl.VERTEX_SHADER ? "vertex shader" : ( type === gl.FRAGMENT_SHADER ?
-					"fragment shader" : "undefined shader" );
-			console.error( "a(n) " + typStr + " shader did not compile: " + gl.getShaderInfoLog( ret ) );
-		}
+		return ret;
+// 		if ( gl.getShaderParameter( ret, gl.COMPILE_STATUS ) )
+// 			return ret;
+// 		else {
+// 			The error message outputs the type of shader or undefined, this works for my purposes even though I miss others like the geometry shader.
+// 			const typStr = type === gl.VERTEX_SHADER ? "vertex shader" : ( type === gl.FRAGMENT_SHADER ?
+// 					"fragment shader" : "undefined shader" );
+// 			console.error( "a(n) " + typStr + " shader did not compile: " + gl.getShaderInfoLog( ret ) );
+// 		}
 	};
 	
 	// Simple helper function to compiler a program.
@@ -72,10 +73,11 @@ const fn = () => {
 		}
 		
 		gl.linkProgram( ret );
-		if ( gl.getProgramParameter( ret, gl.LINK_STATUS ) )
-			return ret;
-		else
-			console.error( "a program did not link: " + gl.getProgramInfoLog( ret ) );
+		return ret;
+// 		if ( gl.getProgramParameter( ret, gl.LINK_STATUS ) )
+// 			return ret;
+// 		else
+// 			console.error( "a program did not link: " + gl.getProgramInfoLog( ret ) );
 	};
 	
 	// The first framebuffer stores the circles which are then rendered on the background.
@@ -250,10 +252,14 @@ const fn = () => {
 		// Elements per circle of WebGL buffer array (circleData)
 		const CIRC_SIZE = 10;
 		// Elements per circle of general circle bookeeping array (this.circles)
-		const CIRCLES_SIZE = 8;
-		
+		const CIRCLES_SIZE = 9;
+
+
+		// Array that gets fed to GL shaders
 		let circleData = [];
+		// Bookeeping array that contains calculation information we need
 		this.circles = [];
+		//
 		
 		const colorCenter = [ 0.745, 0.960, 0.976, 0.8 ];
 		const colorSides = [ 0.745, 0.960, 0.976, 0.8 ];
@@ -266,7 +272,7 @@ const fn = () => {
 // 		const arr_of_colors = [ green, blue, red, cyan, yellow ];
 
 // 		let tempBookeeping = 0;
-		const createCircle = ( cx, cy, r, spin, angle_offset ) => {
+		const createCircle = ( cx, cy, r, spin, angle_offset, number ) => {
 			// Push the various attributes to the array.
 			this.circles.push( cx );
 			this.circles.push( cy );
@@ -277,15 +283,23 @@ const fn = () => {
 			this.circles.push( spin );	// spin goal
 			this.circles.push( false );	// is this circle zeroed?
 
+			// Text associated with circle.
+			const text = document.getElementById( "circ" + number );
+			this.circles.push( text );
+			text.style.width = 0.5 * r;
+			text.style.height = 0.5 * r;
+			text.style.left = (cx - r / 4) + 'px';
+			text.style.top = (canvas.height - cy - r / 2) + 'px';
+
 			let ang1 = angle_offset + Math.PI > Math.PI * 2 ? angle_offset - Math.PI : angle_offset + Math.PI;
 			let ang2 = angle_offset + Math.PI * 1.7 > Math.PI * 2 ? angle_offset - Math.PI * 0.3 : angle_offset + Math.PI * 1.7;
 			let ang3 = angle_offset + Math.PI * 0.7 > Math.PI * 2 ? angle_offset - Math.PI * 1.3 : angle_offset + Math.PI * 0.7;
 			
 			// Assign initial parameters. This is necessary since I don't set the color anywhere else.
 			circleData = [ ...circleData,
-				cx, cy, r * 0.6, 0, 0, 2. * Math.PI + 0.001 , ...colorCenter,
-				cx, cy, r, r * 0.9, ang1, ang2, ...colorSides,
-				cx, cy, r, r * 0.9, angle_offset, ang3, ...colorSides,
+				cx, cy, r * 0.65, 0, 0, 2. * Math.PI + 0.001 , ...colorCenter,
+				cx, cy, r, r * 0.92, ang1, ang2, ...colorSides,
+				cx, cy, r, r * 0.92, angle_offset, ang3, ...colorSides,
 			];
 
 // Identifies the circles distinctly for debugging...
@@ -328,9 +342,11 @@ const fn = () => {
 			let r_p = this.circles[ index * CIRCLES_SIZE + 5 ];
 			let spin_goal = this.circles[ index * CIRCLES_SIZE + 6 ];
 			const zeroed = this.circles[ index * CIRCLES_SIZE + 7 ];
+// 			const
 
 			// Spring equation for radius.
 			const k_r = 0.00002;
+// 			if
 			const damp = 0.04;
 			const r_pp = k_r * ( r_goal - r );
 			r_p = r_p + ( r_pp ) * tDelta - r_p * damp;
@@ -372,11 +388,11 @@ const fn = () => {
 			circleData[ index * CIRC_SIZE * 3 + 1 ] = cy;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 1 ] = cy;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 1 ] = cy;
-			circleData[ index * CIRC_SIZE * 3 + 2 ] = r * 0.6;
+			circleData[ index * CIRC_SIZE * 3 + 2 ] = r * 0.65;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 2 ] = r;
-			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 3 ] = r * 0.9;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 3 ] = r * 0.92;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 2 ] = r;
-			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 3 ] = r * 0.9;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 3 ] = r * 0.92;
 			
 			// Updating changed circle parameters.
 			this.circles[ index * CIRCLES_SIZE + 5 ] = r_p;
@@ -405,13 +421,14 @@ const fn = () => {
 		
 		// These dictate the placing, distance between, and radius of the circles in resting and expanded states.
 		// They change with a screen resize.
-		let REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES;
+		let REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.2;
 		let EXP_R = REST_R * 1.3;
-		let PAD = EXP_R + Math.min( cw, ch ) * 0.25;
-		let DIST = Math.max( canvas.width, canvas.height ) * 1.1 / ( NUM_OF_CIRCLES );
+		let PAD = EXP_R + Math.min( cw, ch ) * 0.1;
+		let DIST = Math.max( canvas.width, canvas.height ) * 1.06 / ( NUM_OF_CIRCLES );
 		
 		// This places the circles initially
-		{
+		// Put in a function to benchmark it.
+		const gen_circles = () => {
 			let xOrig = 0;
 			let yOrig = 0;
 			let angAdd = 0;
@@ -432,7 +449,7 @@ const fn = () => {
 			
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 				let angle_offset = Math.random() * Math.PI * 2;
-				createCircle( xOrig, yOrig, REST_R, RESTING_SPIN_RATE, angle_offset );
+				createCircle( xOrig, yOrig, REST_R, RESTING_SPIN_RATE, angle_offset, i + 1 );
 				
 				if ( i == NUM_OF_CIRCLES - 1 )
 					break;
@@ -484,7 +501,9 @@ const fn = () => {
 				xOrig = cx;
 				yOrig = cy;
 			}
-		}
+		};
+
+		gen_circles();
 		
 		const arcBuffer = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
@@ -590,7 +609,7 @@ const fn = () => {
 			gl.uniform2f( Uresolution, canvas.width, canvas.height );
 			
 			// Next, reset the values for r and the pad / distance (though reseting the pad and distance is not really necessary, I do it anyways in case I do anything more with them in the future).
-			REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES;
+			REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.2;
 			EXP_R = REST_R * 1.3;
 			PAD = EXP_R + Math.min( cw, ch ) * 0.25;
 			DIST = Math.max( canvas.width, canvas.height ) * 1.1 / ( NUM_OF_CIRCLES );
@@ -602,6 +621,12 @@ const fn = () => {
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 				this.circles[ i * CIRCLES_SIZE + 0 ] *= w_ratio;
 				this.circles[ i * CIRCLES_SIZE + 1 ] *= h_ratio;
+				const text = this.circles[ i * CIRCLES_SIZE + 8 ];
+
+				text.style.width = 0.5 * REST_R;
+				text.style.height = 0.5 * REST_R;
+				text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - REST_R / 4) + 'px';
+				text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - REST_R / 2) + 'px';
 			}
 			
 			// Finally, manually trigger the mouse move event so we can update all of the circles' radii.
@@ -610,12 +635,13 @@ const fn = () => {
 
 		// Sets the circles' r and spin to their original defaults.
 		this.reset = ( pageLeave ) => {
-			// Don't process event in selected state
+			// If we are normally navving, keep all circles at rest on nav away.
 			if ( SELECTED_STATE === false ) {
 				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 					// Set r_goal and spin_goal to start.
 					this.circles[ i * CIRCLES_SIZE + 4 ] = REST_R;
 					this.circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
+					this.circles[ i * CIRCLES_SIZE + 7 ] = false;
 					// Set r and spin to goal and r' to zero. This will stop any current motion and is used when leaving the page.
 					if ( pageLeave === true ) {
 						this.circles[ i * CIRCLES_SIZE + 5 ] = 0;
@@ -623,6 +649,7 @@ const fn = () => {
 						this.circles[ i * CIRCLES_SIZE + 3 ] = REST_R;
 					}
 				}
+			// If we aren't in nav mode, only keep the big displayed circle at rest.
 			} else {
 				this.circles[ SELECTED_STATE * CIRCLES_SIZE + 3 ] = this.circles[ SELECTED_STATE * CIRCLES_SIZE + 4 ];
 				this.circles[ SELECTED_STATE * CIRCLES_SIZE + 5 ] = 0;
@@ -644,13 +671,22 @@ const fn = () => {
 						this.circles[ i * CIRCLES_SIZE + 4 ] = 1.1 * Math.sqrt( max_x * max_x + max_y * max_y );
 						// Why not?
 						this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
-					}, 300 );
+					}, 500 );
 				} else {
-					// Otherwise, zero the radius / spin and set the circle as 'zeroed' (see updateCircle).
-					this.circles[ i * CIRCLES_SIZE + 4 ] = 0;
-					this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
-					this.circles[ i * CIRCLES_SIZE + 7 ] = true;
+					// We still want a delay to wait for the text to fade out.
+					setTimeout( () => {
+						// Otherwise, zero the radius / spin and set the circle as 'zeroed' (see updateCircle).
+						this.circles[ i * CIRCLES_SIZE + 4 ] = 0;
+						this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
+						this.circles[ i * CIRCLES_SIZE + 7 ] = true;
+					}, 200 );
 				}
+
+				// Fade out the text and turn it off after the fade is done.
+				setTimeout( () => {
+					this.circles[ i * CIRCLES_SIZE + 8 ].style.display = 'none';
+				}, 300 );
+				this.circles[ i * CIRCLES_SIZE + 8 ].className = 'circle-text fade-out';
 			}
 
 			// Disable mouse movement
@@ -687,6 +723,12 @@ const fn = () => {
 		this.deselect = () => {
 			SELECTED_STATE = false;
 			this.reset();
+			setTimeout( () => {
+				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
+					this.circles[ i * CIRCLES_SIZE + 8 ].style.display = 'block';
+					this.circles[ i * CIRCLES_SIZE + 8 ].className = 'circle-text fade-in';
+				}
+			}, 500 );
 			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 		};
 	} )();
@@ -752,43 +794,35 @@ const fn = () => {
 		gl.bindTexture( gl.TEXTURE_2D, fbs.tx1 );
 		gl.uniform1i( Ufg, 0 );
 
-		// Resolution of the image, center of the image (where we want the center to be), and the normalized center
-		const res_x = 5105;
-		const res_y = 2871;
-		const center_x = 1275;
-		const center_y = 1419;
-		const rate_x = center_x / res_x;
-		const rate_y = center_y / res_y;
+		// Resolution of the image
+		const res_x = 3840;
+		const res_y = 2160;
+		// Not really the center, but a point we will center our calculations for the texture coords around.
+		const center_x = 1 - 1275 / 5160;
+		const center_y = 1 - 1419 / 2871;
+		
+		// Scaling the image to the width of the screen.
+		let scale_x = Math.min( 1, 2 * canvas.width / res_x );
+		let scale_y = Math.min( 1, 2 * canvas.height / res_y );
 
 		// Percentage of the shown image to parallax scroll
 		const extra_scale = 0.1;
-		
-		// Scaling the image to the width of the screen.
-		let scale_x = Math.min( 1, canvas.width / res_x * 2 );
-		let scale_y = Math.min( 1, canvas.height / res_y * 2 );
 
 		let bk_arr = [];
 
 		{
-			const left_scale = scale_x * rate_x - extra_scale * scale_x;
-			const right_scale = scale_x * ( 1 - rate_x ) - extra_scale * scale_x;
-			const down_scale = scale_y * rate_y - extra_scale * scale_y;
-			const up_scale = scale_y * ( 1 - rate_y ) - extra_scale * scale_y;
+			const l_s = center_x * ( 1 - scale_x ) + extra_scale * scale_x;
+			const b_s = center_y * ( 1 - scale_y ) + extra_scale * scale_y;
+			const r_s = l_s + scale_x - 2 * extra_scale * scale_x;
+			const t_s = b_s + scale_y - 2 * extra_scale * scale_y;
 
 			bk_arr = new Float32Array( [
-				rate_x + right_scale, rate_y + up_scale,
-				rate_x + right_scale, rate_y - down_scale,
-				rate_x - left_scale, rate_y + up_scale,
-				rate_x - left_scale, rate_y - down_scale,
+				r_s, t_s,
+				r_s, b_s,
+				l_s, t_s,
+				l_s, b_s,
 			] );
 		}
-
-// 		const bk_arr = new Float32Array( [
-// 			( 1 - extra_scale ), ( 1 - extra_scale ),
-// 			( 1 - extra_scale ), ( 0 + extra_scale ),
-// 			( 0 + extra_scale ), ( 1 - extra_scale ),
-// 			( 0 + extra_scale ), ( 0 + extra_scale )
-// 		] );
 
 		const pos_buf = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, pos_buf );
@@ -841,7 +875,7 @@ const fn = () => {
 			gl.bufferSubData( gl.ARRAY_BUFFER, 0, new_arr, 0, 8 );
 		};
 		
-		const v_mult = 0.0001;
+		const v_mult = 0.00005;
 		this.x = 0;
 		this.y = 0;
 		
@@ -853,14 +887,28 @@ const fn = () => {
 			
 			this.x += velx * tDelta;
 			this.y += vely * tDelta;
-			
+
 			addToBkBuff();
 			render();
 		};
 		
 		this.resize = () => {
-			scale_x = image.naturalWidth / canvas.width;
-			scale_y = image.naturalHeight / canvas.height;
+			scale_x = Math.min( 1, 2 * canvas.width / res_x );
+			scale_y = Math.min( 1, 2 * canvas.height / res_y );
+
+			{
+				const l_s = center_x * ( 1 - scale_x ) + extra_scale * scale_x;
+				const b_s = center_y * ( 1 - scale_y ) + extra_scale * scale_y;
+				const r_s = l_s + scale_x - 2 * extra_scale * scale_x;
+				const t_s = b_s + scale_y - 2 * extra_scale * scale_y;
+
+				bk_arr = new Float32Array( [
+					r_s, t_s,
+					r_s, b_s,
+					l_s, t_s,
+					l_s, b_s,
+				] );
+			}
 		};
 
 		this.reset = () => {
