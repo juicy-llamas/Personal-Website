@@ -77,7 +77,7 @@ body {
 	position: absolute;
 	display: block;
 	text-align: center;
-	font-size: 2em;
-	font-family: sans-serif;
+	font-size: 4vmin;
+	font-family: 'Montserrat', sans-serif;
 	pointer-events: none;
 }
