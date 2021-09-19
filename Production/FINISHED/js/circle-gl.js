@@ -133,22 +133,20 @@ const circle_gl = function ( circle_num ) {
 	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ 0, 1, 2, 3 ] ), gl.STATIC_DRAW );
 
 	// Number of vertex array elements per circle.
-	this.elms_per_circle = 10;
-	// Defines the array for the control attributes so it can be edited outside the func.
-	this.circleBuffer = new Float32Array( circle_num * elms_per_circle );
+	const elms_per_circle = 10;
 
 	// arcBuffer is a different name then circleBuffer, and is the gl buffer obj that loads circleBuffer
 	const arcBuffer = gl.createBuffer();
 	gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
-	gl.bufferData( gl.ARRAY_BUFFER, this.circleBuffer, gl.STATIC_DRAW );
+	gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( circle_num * elms_per_circle ), gl.STATIC_DRAW );
 
-	this.render = () => {
+	this.render = ( curBuffer ) => {
 		// We use this program.
 		gl.useProgram( program );
 
 		// We update the gl buffer with our presumably new information.
 		gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
-		gl.bufferSubData( gl.ARRAY_BUFFER, 0, this.circleBuffer, 0, Math.round( circle_num * elms_per_circle ) );
+		gl.bufferSubData( gl.ARRAY_BUFFER, 0, curBuffer, 0, Math.round( circle_num * elms_per_circle ) );
 
 		// Enable all vertex attribs to start (the ones we need)
 		gl.enableVertexAttribArray( vertexNum );
