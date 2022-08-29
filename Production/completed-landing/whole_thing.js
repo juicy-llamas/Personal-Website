@@ -278,32 +278,8 @@ const fn = () => {
 			// Text associated with circle.
 			const text = document.getElementById( "circ" + number );
 			this.circles.push( text );
-			text.style.width = 0.75 * r;
-			text.style.height = 0.75 * r;
-			switch ( number ) {
-				case 1: // Other Projects
-					text.style.left = (cx - r / 2) + 'px';
-					text.style.top = (canvas.height - cy - r / 2.4) + 'px';
-					break;
-				case 2: // This Site
-					text.style.left = (cx - r / 4) + 'px';
-					text.style.top = (canvas.height - cy - r / 2) + 'px';
-					break;
-				case 3: // About Me
-					text.style.left = (cx - r / 4) + 'px';
-					text.style.top = (canvas.height - cy - r / 2) + 'px';
-					break;
-				case 4: // Contact
-					text.style.left = (cx - r / 4) + 'px';
-					text.style.top = (canvas.height - cy - r / 2) + 'px';
-					break;
-				case 5: // My Blog
-					text.style.left = (cx - r / 4) + 'px';
-					text.style.top = (canvas.height - cy - r / 2) + 'px';
-					break;
-				default:
-					console.error( "createCircle: number is out of bounds. value: " + number );
-			}
+			text.style.left = (cx - text.clientWidth / 2) + 'px';
+			text.style.top = (canvas.height - cy - text.clientHeight / 2) + 'px';
 
 			let ang1 = angle_offset + Math.PI > Math.PI * 2 ? angle_offset - Math.PI : angle_offset + Math.PI;
 			let ang2 = angle_offset + Math.PI * 1.7 > Math.PI * 2 ? angle_offset - Math.PI * 0.3 : angle_offset + Math.PI * 1.7;
@@ -618,28 +594,8 @@ const fn = () => {
 				const text = this.circles[ i * CIRCLES_SIZE + 8 ];
 
 				// Also change the text position
-				switch ( i + 1 ) {
-					case 1: // Other Projects
-						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
-						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2.4) + 'px';
-						break;
-					case 2: // This Site
-						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
-						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
-						break;
-					case 3: // About Me
-						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
-						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
-						break;
-					case 4: // Contact
-						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
-						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
-						break;
-					case 5: // My Blog
-						text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 4) + 'px';
-						text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - this.circles[ i * CIRCLES_SIZE + 4 ] / 2) + 'px';
-						break;
-				}
+				text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - text.clientWidth / 2) + 'px';
+				text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - text.clientHeight / 2) + 'px';
 			}
 		};
 
