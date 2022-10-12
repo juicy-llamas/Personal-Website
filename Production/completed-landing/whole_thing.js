@@ -893,11 +893,11 @@ const fn = () => {
 		// When we click on a circle (one of the five, right now), we will display and fade in all of the elements in the array.
 		// When we click on the back arrow, we will fade out all of them, and then set them to 'display:none;' with a setTimeout call.
 		const DOCUMENTS = [
-			[],
-			[],
-			[],
-			[],
-			[]
+			[document.getElementById( "page1" )],
+			[document.getElementById( "page2" )],
+			[document.getElementById( "page3" )],
+			[document.getElementById( "page4" )],
+			[document.getElementById( "page5" )]
 		];
 		// Arrow object (is constant for every document)
 		const arrow_obj = document.getElementById( "back-arrow" );
@@ -926,8 +926,10 @@ const fn = () => {
 			arrow_timeout = setTimeout( () => { arrow_obj.style.display = 'none'; this.update = () => {}; }, 1100 );
 
 			// Enumerate because we need both index and element.
-			for ( [ i, elm ] of chosen_one.entries() ) {
-				elm.className = 'fade_out';
+			for ( let i = 0; i < chosen_one.length; i++ ) {
+				let elm = chosen_one[ i ];
+					elm.classList.add( 'fade_out' );
+					elm.classList.remove( 'fade_in' );
 				// The animation *should* takes 400 ms to complete, so I add an extra 50 ms just to be sure the function is called when it's completed.
 				chosen_timeouts[ i ] = setTimeout( () => { elm.style.display = 'none'; }, 450 );
 			}
@@ -966,15 +968,19 @@ const fn = () => {
 				last_index = THE_CHOSEN_DOCUMENT;
 				chosen_timeouts = [];
 				// Loop through each element and set it to fade in.
-				for ( elm in chosen_one ) {
+				console.log( chosen_one );
+				for ( let i = 0; i < chosen_one.length; i++ ) {
+					let elm = chosen_one[ i ];
+					console.log( elm );
 					elm.style.display = 'block';
-					elm.className = 'fade_in';
+					elm.classList.add( 'fade_in' );
+					elm.classList.remove( 'fade_out' );
 				}
 			}
 		};
 
 		const live_update = () => {
-			const k = 0.000018;
+			const k = 0.000034;
 			const damp = 0.06;
 			opacity_pp = k * ( goal_opacity - current_opacity );
 			opacity_p = opacity_p + opacity_pp * tDelta - opacity_p * damp;
