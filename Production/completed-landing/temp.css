@@ -25,11 +25,19 @@
 	margin: 0;
 	padding: 0;
 	border: 0;
-	overflow: hidden;
+}
+
+html {
+	width: 100vw;
+	height: 100vh;
 }
 
 body {
-	background-color: #000;
+	width: 100%;
+	height: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+/* 	background-color: #000; */
 }
 
 .gl_image {
@@ -37,47 +45,56 @@ body {
 }
 
 #content {
-	position: relative;
-	display: block;
+	width: 100%;
+	height: 100%;
 /* 	Initial fade in */
 	animation-name: fade_in;
 	animation-duration: 1s;
 	animation-timing-function: ease;
 }
 
-#content > canvas {
-	position: relative;
-	display: block;
-}
-
-#content > div {
-	position: absolute;
-	display: block;
-}
-
-#over-canvas {
-	overflow: visible;
+#screen {
+	width: 100%;
+	height: 100%;
+	position: fixed;
 	top: 0;
 	left: 0;
-	z-index: 10;
 }
 
-#back-arrow {
-	position: relative;
-	top: 1vmin;
-	left: 1vmin;
-	width: 10vmin;
-	height: 10vmin;
-	opacity: .7;
-/* 	Arrow will start off not displaying since nothing's selected.*/
-	display: none;
-}
 
 .circle-text {
 	position: absolute;
 	display: block;
 	text-align: center;
+	max-width: 180px;
 	font-size: 4vmin;
 	font-family: 'Montserrat', sans-serif;
 	pointer-events: none;
+}
+
+#over-canvas {
+	z-index: 1;
+}
+
+#back-arrow {
+	position: absolute;
+	top: 1vmin;
+	left: 1vmin;
+	width: calc( 8vmin + 60px );
+	height: calc( 8vmin + 60px );
+	opacity: .7;
+/* 	Arrow will start off not displaying since nothing's selected.*/
+	display: none;
+}
+
+.page {
+	display: none;
+	position: relative;
+	top: 0;
+	left: 0;
+	z-index: 2;
+}
+
+.title {
+	max-height: 100px;
 }
