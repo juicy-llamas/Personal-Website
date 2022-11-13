@@ -1,0 +1,272 @@
+
+/* main p font */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;600&display=swap');
+/* italic ps */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,100;1,300;1,400;1,600&display=swap');
+/* subtitles */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&display=swap');
+/* code blocks / subtitlestitles maybe? */
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+/* for title */
+@import url('https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Code+Latin:wght@100;500&display=swap');
+
+:root {
+	--pg-bm: 1.4rem;
+	--pg-hm: 8vw;
+	--tit-fsz: 4.4rem;
+	--arr-sz: calc( 8vmin + var( --tit-fsz ) * 1.5 );
+	--arr-vm: calc( 1vmin + 2px );
+	--arr-hm: calc( 1vmin + 12px );
+	--tit-vm: calc( ( var( --arr-sz ) + 2 * var( --arr-vm ) - 1.34 * var( --tit-fsz ) ) / 2 );
+	--tit-lm: calc( var( --arr-hm ) * 2 + var( --arr-sz ) - var( --pg-hm ) + 1.6rem );
+	--h-m-factor: .7;
+	--p-m-default: .7rem;
+	--link-hover: #FF0000;
+	--link-idle: #00FF00;
+}
+
+/* margin: [top] [right] [bottom] [left]; */
+/* OR margin: [top] [right and left] [bottom]; */
+/* OR margin: [top and bottom] [right and left]; */
+
+#back-arrow {
+	position: absolute;
+	top: var( --arr-vm );
+	left: var( --arr-hm );
+	width: var( --arr-sz );
+	height: var( --arr-sz );
+	opacity: .7;
+/* 	Arrow will start off not displaying since nothing's selected.*/
+	display: none;
+}
+
+div, a, p {
+	height: fit-content;
+}
+
+.page {
+	display: none;
+	font-family: 'Montserrat';
+	position: relative;
+	top: 0;
+	left: 0;
+	z-index: 2;
+	margin: 0 var( --pg-hm ) var( --pg-bm ) var( --pg-hm );
+}
+
+.page .title {
+	margin: var( --tit-vm ) 0 var( --tit-vm ) var( --tit-lm );
+	font-family: 'M PLUS Code Latin';
+	font-size: var( --tit-fsz );
+}
+
+/* headers */
+.page h1, .page h2, .page h3, .page h4, .page h5 {
+	font-family: 'Ubuntu Mono'; } .page h1 {
+	font-size: 3.6rem;
+	font-family: 'M PLUS Code Latin';
+	font-weight: 100;
+	margin-top: calc( 3.6rem * var( --h-m-factor ) );
+	margin-bottom: calc( 3.6rem * var( --h-m-factor ) ); } .page h2 {
+	font-size: 2.4rem;
+	font-family: 'Comfortaa';
+	font-weight: 300;
+	margin-top: calc( 2.4rem * var( --h-m-factor ) );
+	margin-bottom: calc( 2.4rem * var( --h-m-factor ) ); } .page h3 {
+	font-size: 1.6rem;
+	font-family: 'Montserrat';
+	font-weight: 600;
+	margin-top: calc( 1.6rem * var( --h-m-factor ) );
+	margin-bottom: calc( 1.6rem * var( --h-m-factor ) );
+}
+
+/* paragraphs */
+.page p, .page a {
+	font-weight: 300;
+	text-indent: 3rem;
+	font-size: 1.2rem;
+	line-height: 140%;
+	margin-top: var( --p-m-default );
+	margin-bottom: var( --p-m-default );
+}
+.page .p-big-c {
+	font-weight: 400;
+	font-size: 1.5rem;
+	text-indent: 0;
+	text-align: center;
+	position: relative;
+	left: 10%;
+	width: 80%;
+	margin-top: calc( var( --p-m-default ) * 3 );
+	margin-bottom: calc( var( --p-m-default ) * 3 );
+}
+.page a {
+	text-indent: 0;
+	margin: 0;
+	color: var( --link-idle );
+	transition: color 0.6s;
+	text-decoration: none;
+}
+.page a:hover {
+	color: var( --link-hover );
+}
+.page .a-icont * {
+	width: 100%;
+	opacity: 0.6;
+}
+.page .a-icont * {
+	background-color: var( --link-idle );
+	transition: background-color 0.6s;
+}
+.page .a-icont:hover * {
+	background-color: var( --link-hover );
+}
+
+/* no stretchy imgs */
+.page img {
+	object-fit: contain;
+}
+
+/* dividers */
+.page .lr-divider, .page .tri-divider {
+	display: flex;
+	flex-direction: row;
+	margin-top: calc( 4 * var( --p-m-default ) );
+	margin-bottom: calc( 2 * var( --p-m-default ) );
+}
+
+/* options for lr divider */
+.page .l-big {
+	float: left;
+	width: 60%;
+	margin-right: 8%;
+} .page .l-small {
+	float: left;
+	width: 34%;
+	margin-right: 8%;
+} .page .r-big {
+	float: right;
+	width: 60%;
+} .page .r-small {
+	float: right;
+	width: 34%;
+}
+/* fix for imgs in links */
+/*.page .l-big > img, .page .l-small > img, .page .r-big > img, .page .r-small > img {
+	width: 100%;
+}*/
+
+/* tri divider; you can set the divisions with margins */
+.page .tri-divider > * {
+	width: 33.33%;
+}
+/* quick and easy way to do just that */
+.page .tri-l {
+	margin-right: 3%;
+} .page .tri-c {
+	margin-left: 3%;
+	margin-right: 3%;
+} .page .tri-r {
+	margin-left: 3%;
+}
+/* another quick and easy way */
+.page .tri-elm {
+	margin-left: 3%;
+	margin-right: 3%;
+}
+
+.page .emph-border {
+	background-color: #BEE;
+	border-radius: calc( 2 * var( --p-m-default ) );
+	margin-top: calc( 2 * var( --p-m-default ) );
+	margin-bottom: calc( 2 * var( --p-m-default ) );
+	padding: calc( 4 * var( --p-m-default ) );
+} .page .emph-border:first-child {
+	margin-top: 0;
+} .page .emph-border:last-child {
+	margin-bottom: 0;
+}
+
+/* icon dock stuff */
+.page .icon-dock {
+	display: grid;
+	grid-template-columns: auto auto auto;
+	gap: 4%
+} .page .icon-dock .icon {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	object-fit: contain;
+} .page .icon-dock .icon .ic-img {
+	width: 100%;
+	height: 100%;
+} .page .icon-dock .return-bar {
+	width: 0;
+	height: 0;
+	display: none;
+} .page .icon-dock + .icon-views {
+	width: 100%;
+	height: 0;
+	overflow: hidden;
+} .page .icon-dock + .icon-views > * {
+	display: none;
+}
+
+@keyframes icons-click {
+	0% {
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+	}
+	100% {
+		top: 50%;
+		left: 50%;
+		width: 0%;
+		height: 0%;
+	}
+}
+
+@keyframes show-click {
+	0% {
+		height: 0;
+	}
+	100% {
+		height: auto;
+	}
+}
+.page .dock-disp .icon {
+	animation-duration: 1s;
+	animation-name: icons-click;
+	width: 0;
+	height: 0;
+} .page .dock-disp + .icon-views {
+	animation-duration: 1s;
+	animation-delay: 0.2s;
+	animation-name: show-click;
+	height: auto;
+} .page .dock-disp + .icon-views .view-disp {
+	display: block;
+
+}
+
+/* captions and footer */
+.cap-img {
+	display: flex;
+	flex-direction: column;
+}
+.cap-img p {
+	font-style: italic;
+	font-size: 0.8rem;
+	text-align: center;
+	line-height: 100%;
+	max-width: 80%;
+	margin-left: 10%;
+	text-indent: 0;
+}
+
+.footer p {
+	text-align: center;
+	text-indent: 0;
+}

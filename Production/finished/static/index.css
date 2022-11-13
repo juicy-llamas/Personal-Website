@@ -1,0 +1,83 @@
+
+@keyframes fade_in {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes fade_out {
+	from { opacity: 1; }
+	to { opacity: 0; }
+}
+
+:root {
+/* 	dis should be circle diameter, perhaps set w js */
+	--crc-txt-sz: 18vmin;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+html {
+	width: 100vw;
+	height: 100vh;
+}
+
+body {
+	width: 100%;
+	height: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+/* 	background-color: #000; */
+}
+
+.gl_image {
+	display:none;
+}
+
+.content {
+	width: 100%;
+	height: 100%;
+/* 	initially */
+	opacity: 0;
+}
+
+#screen {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	left: 0;
+}
+
+
+.circle-text {
+	position: absolute;
+	display: block;
+	text-align: center;
+/* 	dis should be circle diameter, perhaps set w js */
+	max-width: var( --crc-txt-sz );
+	font-size: 4vmin;
+	font-family: 'Montserrat', sans-serif;
+	pointer-events: none;
+}
+
+.over-canvas {
+	z-index: 1;
+}
+
+.fade-in {
+	opacity: 1;
+	animation-name: fade_in;
+	animation-duration: 0.3s;
+	animation-timing-function: ease;
+}
+
+.fade-out {
+	opacity: 0;
+	animation-name: fade_out;
+	animation-duration: 0.3s;
+	animation-timing-function: ease;
+}
