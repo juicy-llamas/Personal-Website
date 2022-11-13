@@ -15,25 +15,95 @@
 		
 		<img src="../Assets/sunset.jpg" crossOrigin="anonymous" class="gl_image" id="image"></img>
 		
-		<div id="content">
+		<div class="content">
 			<canvas id="screen">Fuck off.</canvas>
 
-			<div id="over-canvas">
+			<div class="over-canvas">
 				<div class="page" id="page1">
-					<div class="title"><h1>Title</h1></div>
+					<div class="title"><span>Other Projects</span></div>
+					<div class="center">
+						<h1>Peer to Peer Projects</h1>
+						<p class="p-big-c">Over the years, I've made a fair amount of applications intended to be server side projects. They really have not come to fruition substinatively, as developing peer-to-peer software in C is rather complicated and time consuming, and it really isn't often work the time frankly. I have actually managed to implement at least one working P2P system, though, if you count "being able to accept multiple, distinct connections, spawn a process thread (that does nothing) for each, and not crash" as working. I felt I should include them here because they are interests of mine and I did put a fair amount of thought in the high-level design at least, if not the implementation.</p>
+						<h3>File Sharing Utility</h3>
+						<p>If I was going to continue working on any one of these, I would choose this one first. It is by far the most useful of the bunch in that I keep getting somewhat frustrated I haven't made it yet and I can't use it. I often work on 2-3 computers at any given time, and sometimes I wish they could just <i>sync</i>, so that I don't have to worry about things like uploading and downloading from/to Google Drive, USB drives, GitHub for file storage, Bluetooth, or any of the other stuff. The most effective method I have is KDEConnect, which can pair (KDE) systems and allow them to access each other's functionality. You can do stuff like run remote commands, type on one computer with another computer, and yes, you can share files. They even have a companion app for Android, which I actually use somewhat regularly. But it only works as a one off thing, and in the end, this particular implementation isn't that much better than Bluetooth.</p>
+						<p>But what if they could just <i>sync</i>? What if I could just set something up <i>one time</i> that gave my other systems access to folders on the system I'm using right now, or vice versa? Then I can go out, do some edits on a file. Then, once I'm at home and using my home WiFi, the laptop can connect to the others (securely) and sync the changes. Of course, you only exclusively want to do this on your home network, and you only want to do this with computers that you specifically authorize, so you can do a preliminary check with MAC addresses or hostnames (In my experience, DHCP Routers (that dynamically allocate IPs instead of a static router) usually retain the IPs of recurring devices on the network, but best not to take chances and lock yourself out). Then, you can authenticate using public key encryption, where each system has a key pair (or just simply do this first). Thus, each peer on the network would have to first check if they're on the right network, and then reach out to other computers and issue their challenge. After the peers pass the challenge, they then will wait (in a non busy way, no while loops with sleep) for either their files to update or an incoming file from another peer.</p>
+						<p>I've tested and written components of this project. I've sent files using sockets and developed a command line parser for it. I've also redone it a few times. </p>
+						<h3></h3>
+					</div>
+
+					<div class="footer">
+						<p>(c) Daniel Moylan 2022</p>
+					</div>
 				</div>
-				<div class="page" id="page2"></div>
-				<div class="page" id="page3"></div>
-				<div class="page" id="page4"></div>
-				<div class="page" id="page5"></div>
+				<div class="page" id="page2">
+					<div class="title"><span>Web Dev</span></div>
+					<div class="center">
+						<h1>This Site</h1>
+						<div class="soft-box">
+							<h3>Design History</h3>
+							<p>I knew I wanted to make my site with WebGL from the start, to test my abilities. At the very beginning, I was just beginning to learn the general workflow of WebGL bit by bit, and it seemed very foreign, as I didn't quite understand the low-level GL calls. It took me a while to get even an image to display on a screen, but I kept persevering and </p>
+							<h3>Difficulties</h3>
+							<h3>What I would change if I did it over</h2>
+							<p>At this point, WebGL is great, but for something simple like this, I would opt for pure CSS3 animations. The only thing about CSS animations is that they aren't necessarily smooth, like the euler's model I implemented, but they would work. Another thing would be to split my JS into compartments. Perhaps even having multiple different site templates, and injecting templates into a main page using django or node.js would be ideal.</p>
+						</div>
+						<h1>The Wasted West</h1>
+						<div class="soft-box">
+							<h3>Design History</h3>
+							<p>Since I already had a smooth parallax effect from my personal website, I just copied that over to the Wasted Site and started there. My original idea was to have a sort of tiered parallax effect, with three images moving around at different rates. So I started development by changing my original monotonic parallax effect to be 'scalable' by encapsulating the functionality in a class. Then, I piped the WebGL output to a framebuffer passed in as an argument, and I also took a second 'previous output' image and mixed the two together in the frag shader. It was just a matter, then, of setting up two framebuffers and chaining them via the arguments of the functions in such a way so that the background image rendered first, the midground rendered next, and then the foreground image rendered last and pipelined to the null framebuffer (screen). I actually put a lot of work into that, but I quickly realized that creating the images in a way to make the effect look convincing took some doing, and was very troublesome for me, so I simply cut my losses and rendered it as one page. After all, that was really just the beginning of the work to come.</p>
+
+							<h3>Difficulties</h3>
+							<h3>What I would change if I did it over</h3>
+						</div>
+					</div>
+					<div class="footer">
+						<p>(c) Daniel Moylan 2022</p>
+					</div>
+				</div>
+				<div class="page" id="page3">
+					<div class="title"><span>OS Dev</span></div>
+					<div class="center">
+					</div>
+					<div class="footer">
+						<p>(c) Daniel Moylan 2022</p>
+					</div>
+				</div>
+				<div class="page" id="page4">
+					<div class="title"><span>Programming Languages</span></div>
+					<div class="center">
+					</div>
+					<div class="footer">
+						<p>(c) Daniel Moylan 2022</p>
+					</div>
+				</div>
+				<div class="page" id="page5">
+					<div class="title"><span>About Me</span></div>
+					<div class="center">
+						<div class="lr-divider">
+							<img class="l-small" href="../Assets/alpaca.jpeg"></img>
+							<p>I am a programmer that has spent over 9 years doing some type of programming or other. I'm also currently a Senior in college, and I'll be graduating in the Fall of 2023</p>
+						</div>
+					</div>
+					<div class="footer">
+						<p>(c) Daniel Moylan 2022</p>
+					</div>
+				</div>
+				<div class="page" id="page6">
+					<div class="title"><span>Contact</span></div>
+					<div class="center">
+					</div>
+					<div class="footer">
+						<p>(c) Daniel Moylan 2022</p>
+					</div>
+				</div>
 
 				<img id="back-arrow" src="../Assets/arrow.png"></img>
 
 				<div class="circle-text" id="circ1"><p>Other Projects</p></div>
-				<div class="circle-text" id="circ2"><p>This Site</p></div>
-				<div class="circle-text" id="circ3"><p>About Me</p></div>
-				<div class="circle-text" id="circ4"><p>Contact</p></div>
-				<div class="circle-text" id="circ5"><p>My Blog</p></div>
+				<div class="circle-text" id="circ2"><p>Web Dev</p></div>
+				<div class="circle-text" id="circ3"><p>OS Dev</p></div>
+				<div class="circle-text" id="circ4"><p>Prog. Langs</p></div>
+				<div class="circle-text" id="circ5"><p>About Me</p></div>
+				<div class="circle-text" id="circ6"><p>Contact</p></div>
 			</div>
 		</div>
 
