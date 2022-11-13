@@ -241,11 +241,11 @@ const fn = () => {
 		gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ 0, 1, 2, 3 ] ), gl.STATIC_DRAW );
 
 		// Number of circles on screen
-		const NUM_OF_CIRCLES = 5;
+		const NUM_OF_CIRCLES = 6;
 		
 		// Defines spin rates (resting is initial, when you first move your mouse over a circle it speeds up to spinny, and when it hits SPINNY_SPIN_RATE - SPIN_TOLERANCE or above, it drops down to OVER_SPIN_RATE.
 		const RESTING_SPIN_RATE = .2;
-		const SPINNY_SPIN_RATE = 20;
+		const SPINNY_SPIN_RATE = 12;
 		const OVER_SPIN_RATE = 0;
 		const SPIN_TOLERANCE = 0.01;
 		
@@ -253,7 +253,9 @@ const fn = () => {
 		const CIRC_SIZE = 10;
 		// Elements per circle of general circle bookeeping array (this.circles)
 		const CIRCLES_SIZE = 9;
-
+		// The sum of these should be below 1.
+		const INNER_RAD = 0.66;
+		const OUTER_RAD = 0.086;
 
 		// Array that gets fed to GL shaders
 		let circleData = [];
@@ -287,9 +289,9 @@ const fn = () => {
 			
 			// Assign initial parameters. This is necessary since I don't set the color anywhere else.
 			circleData = [ ...circleData,
-				cx, cy, r * 0.65, 0, 0, 2. * Math.PI + 0.001 , ...colorCenter,
-				cx, cy, r, r * 0.92, ang1, ang2, ...colorSides,
-				cx, cy, r, r * 0.92, angle_offset, ang3, ...colorSides,
+				cx, cy, r * INNER_RAD, 0, 0, 2. * Math.PI + 0.001 , ...colorCenter,
+				cx, cy, r, r * (1-OUTER_RAD), ang1, ang2, ...colorSides,
+				cx, cy, r, r * (1-OUTER_RAD), angle_offset, ang3, ...colorSides,
 			];
 		};
 
@@ -349,11 +351,11 @@ const fn = () => {
 			circleData[ index * CIRC_SIZE * 3 + 1 ] = cy;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 1 ] = cy;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 1 ] = cy;
-			circleData[ index * CIRC_SIZE * 3 + 2 ] = r * 0.65;
+			circleData[ index * CIRC_SIZE * 3 + 2 ] = r * INNER_RAD;
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 2 ] = r;
-			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 3 ] = r * 0.92;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE + 3 ] = r * (1-OUTER_RAD);
 			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 2 ] = r;
-			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 3 ] = r * 0.92;
+			circleData[ index * CIRC_SIZE * 3 + CIRC_SIZE * 2 + 3 ] = r * (1-OUTER_RAD);
 			
 			// Updating changed circle parameters.
 			this.circles[ index * CIRCLES_SIZE + 5 ] = r_p;
@@ -382,12 +384,29 @@ const fn = () => {
 		
 		// These dictate the placing, distance between, and radius of the circles in resting and expanded states.
 		// They change with a screen resize.
-		let REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.5;
-		let EXP_R = REST_R * 1.3;
-		let PAD = EXP_R * 1.1;
-		let DIST = ( /*Math.max( canvas.width, canvas.height ) * 0.6*/ + EXP_R * 9 ) / ( NUM_OF_CIRCLES );
-		
-		let max_gens = 50;
+		let REST_R = 0;
+		let EXP_R = 0;
+		let PAD = 0;
+		let DIST = 0;
+
+		const set_r_consts = () => {
+			const mx = Math.max( canvas.width, canvas.height );
+			const mn = Math.min( canvas.width, canvas.height );
+			REST_R = Math.sqrt( mx * mn / ( NUM_OF_CIRCLES * NUM_OF_CIRCLES ) * 0.5 );
+// 			console.log( "=============================" );
+// 			console.log( canvas.width );
+// 			console.log( canvas.height );
+// 			console.log( mx*mx/mn/ NUM_OF_CIRCLES/ NUM_OF_CIRCLES * 0.5 );
+// 			console.log( mn * 0.36 );
+// 			console.log( REST_R );
+// 			console.log( "=============================" );
+			EXP_R = REST_R * 1.2;
+			PAD = EXP_R * 1.2;
+			DIST = PAD * 1.75;
+		}
+		set_r_consts();
+
+		let max_gens = 30;
 		// This places the circles initially
 		// Put in a function to benchmark it.
 		const gen_circles = () => {
@@ -408,6 +427,8 @@ const fn = () => {
 				xOrig = k > 0.5 ? PAD : canvas.width - PAD;
 				angAdd = k > 0.5 ? 3 * Math.PI / 2 : Math.PI / 2 ;
 			}
+
+			this.circles = [];
 			
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 				let angle_offset = Math.random() * Math.PI * 2;
@@ -425,14 +446,14 @@ const fn = () => {
 				let bestError = 50000000; // a big number
 				
 				const check = () => {
-					const relu = ( x ) => x > 0 ? x : 0;
-					let error = relu( PAD - cx ) + relu( cx - ( canvas.width - PAD ) ) + relu( PAD - cy ) + relu( cy - ( canvas.height - PAD ) );
+					const plusx = ( x ) => x > 0 ? x : 0;
+					let error = plusx( PAD - cx ) + plusx( cx - ( canvas.width - PAD ) ) + plusx( PAD - cy ) + plusx( cy - ( canvas.height - PAD ) );
 					
 					for ( let j = 0; j < i; j++ ) {
 						let x = cx - this.circles[ j * CIRCLES_SIZE ];
 						let y = cy - this.circles[ j * CIRCLES_SIZE + 1 ];
 						let squ = x * x + y * y;
-						error += relu( DIST * DIST - squ );
+						error += plusx( DIST * DIST - squ );
 					}
 					
 					if ( error > 0 ) {
@@ -446,7 +467,7 @@ const fn = () => {
 						return false;
 				};
 				
-				const max_atts = 20;
+				const max_atts = 16;
 				let limit = max_atts;
 				while ( check() && limit > 0 ) {
 					theta = Math.random() * Math.PI + angAdd;
@@ -456,7 +477,7 @@ const fn = () => {
 				}
 				
 				if ( check() ) {
-					if ( max_gens < 0 ) {
+					if ( max_gens <= 0 ) {
 						cx = bestx;
 						cy = besty;
 					} else {
@@ -576,10 +597,7 @@ const fn = () => {
 			gl.uniform2f( Uresolution, canvas.width, canvas.height );
 			
 			// Next, reset the values for r and the pad / distance (though reseting the pad and distance is not really necessary, I do it anyways in case I do anything more with them in the future).
-			REST_R = Math.min( cw, ch ) / NUM_OF_CIRCLES * 1.5;
-			EXP_R = REST_R * 1.3;
-			PAD = EXP_R * 0.9;
-			DIST = ( Math.max( canvas.width, canvas.height ) * 1.06 + EXP_R ) / ( NUM_OF_CIRCLES );
+			set_r_consts();
 			
 			// Manually trigger the mouse move event so we can update all of the circles' radii.
 			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
@@ -897,7 +915,8 @@ const fn = () => {
 			[document.getElementById( "page2" )],
 			[document.getElementById( "page3" )],
 			[document.getElementById( "page4" )],
-			[document.getElementById( "page5" )]
+			[document.getElementById( "page5" )],
+			[document.getElementById( "page6" )]
 		];
 		// Arrow object (is constant for every document)
 		const arrow_obj = document.getElementById( "back-arrow" );
@@ -1073,13 +1092,17 @@ const fn = () => {
 		canvas.onclick = undefined;
 	};
 
+// 	Do a resize to sync everything (technically undoes some init work but whatever)
 	resize();
 	window.onresize = resize;
 	window.onbeforeunload = leavepage;
 	window.pagehide = leavepage;
 	window.addEventListener( 'visibilitychange', ( e ) => { if ( document.visibilityState === 'hidden' ) leavepage( e ); else animFrame = requestAnimationFrame( animate ); } );
 	canvas.onclick = click_select;
-	
+
+	// 	Finally, when we're all done initializing the page, THEN we fade in so it doesn't look choppy.
+	document.getElementsByClassName( "content" )[ 0 ].classList.add( "fade-in" );
+
 	tPrev = performance.now();
 	animFrame = requestAnimationFrame( animate );
 };
