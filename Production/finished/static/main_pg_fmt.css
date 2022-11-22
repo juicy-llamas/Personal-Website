@@ -61,6 +61,7 @@ div, a, p {
 	font-size: var( --tit-fsz );
 }
 
+
 /* headers */
 .page h1, .page h2, .page h3, .page h4, .page h5 {
 	font-family: 'Ubuntu Mono'; } .page h1 {
@@ -126,6 +127,7 @@ div, a, p {
 /* no stretchy imgs */
 .page img {
 	object-fit: contain;
+	width: 100%;
 }
 
 /* dividers */
@@ -186,6 +188,17 @@ div, a, p {
 	margin-top: 0;
 } .page .emph-border:last-child {
 	margin-bottom: 0;
+}
+
+.page .piped-list {
+	display: flex;
+	flex-flow: row;
+}
+.page .piped-list .left {
+	padding-right: 2rem;
+	border-right: 0.2rem solid;
+} .page .piped-list .right {
+	margin-left: 2rem;
 }
 
 /* icon dock stuff */
@@ -266,6 +279,9 @@ div, a, p {
 	text-indent: 0;
 }
 
+.footer {
+
+}
 .footer p {
 	text-align: center;
 	text-indent: 0;
