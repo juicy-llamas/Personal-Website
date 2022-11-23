@@ -7,6 +7,8 @@
 
 "use strict";
 
+Math.clamp = ( e, g, l ) => e > g ? g : ( e < l ? l : e );
+
 // Need to execute this on the window load, so it's in a function.
 const fn = () => {
 	// Getting variables. For now it's webgl2, but honestly I don't need webgl2, so I might just revert it to webgl1.
@@ -305,14 +307,13 @@ const fn = () => {
 			let r_p = this.circles[ index * CIRCLES_SIZE + 5 ];
 			let spin_goal = this.circles[ index * CIRCLES_SIZE + 6 ];
 			const zeroed = this.circles[ index * CIRCLES_SIZE + 7 ];
-// 			const
 
 			// Spring equation for radius.
-			const k_r = 0.00002;
-// 			if
-			const damp = 0.04;
-			const r_pp = k_r * ( r_goal - r );
-			r_p = r_p + ( r_pp ) * tDelta - r_p * damp;
+			const k_r = 0.000016;
+			const diff = r_goal - r;
+			const damp = Math.clamp( 0.966 + 0.0012 * Math.abs( diff ) - 0.18 * Math.abs( r_p ), 0.96, 0.76 );
+			const r_pp = k_r * diff;
+			r_p = Math.clamp( r_p * damp + r_pp * tDelta, 2, -2 );
 			r = r + r_p * tDelta;
 
 			// If the radius is set to zero, it will go to zero and then come back and oscillate for a while due to the spring equation.
@@ -704,15 +705,18 @@ const fn = () => {
 		};
 
 		// Resets the nav.
-		this.deselect = () => {
+		this.deselect = ( i ) => {
 			SELECTED_STATE = false;
-			this.reset();
+			this.circles[ i * CIRCLES_SIZE + 4 ] = REST_R;
+			this.circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
+			this.circles[ i * CIRCLES_SIZE + 7 ] = false;
 			setTimeout( () => {
+				this.reset();
 				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 					this.circles[ i * CIRCLES_SIZE + 8 ].style.display = 'block';
 					this.circles[ i * CIRCLES_SIZE + 8 ].className = 'circle-text fade-in';
 				}
-			}, 500 );
+			}, 600 );
 			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 		};
 	} )();
@@ -910,21 +914,14 @@ const fn = () => {
 		// An array of arrays of elements that form 'pages'.
 		// When we click on a circle (one of the five, right now), we will display and fade in all of the elements in the array.
 		// When we click on the back arrow, we will fade out all of them, and then set them to 'display:none;' with a setTimeout call.
-		const DOCUMENTS = [
-			[document.getElementById( "page1" )],
-			[document.getElementById( "page2" )],
-			[document.getElementById( "page3" )],
-			[document.getElementById( "page4" )],
-			[document.getElementById( "page5" )],
-			[document.getElementById( "page6" )]
-		];
+		const DOCUMENTS = document.getElementsByClassName( "page" );
 		// Arrow object (is constant for every document)
 		const arrow_obj = document.getElementById( "back-arrow" );
 
 		// Chosen document
-		let chosen_one = [];
+		let chosen_one = null;
 		let last_index = -1;
-		let chosen_timeouts = [];
+		let chosen_timeout = null;
 		// Opacity variables for arrow object (yes it has it's own spring).
 		let current_opacity = 0;
 		let opacity_pp = 0;
@@ -944,18 +941,12 @@ const fn = () => {
 			// 1000 here is an arbitrary amount of time so I can tell how long the animation will take to complete.
 			arrow_timeout = setTimeout( () => { arrow_obj.style.display = 'none'; this.update = () => {}; }, 1100 );
 
-			// Enumerate because we need both index and element.
-			for ( let i = 0; i < chosen_one.length; i++ ) {
-				let elm = chosen_one[ i ];
-					elm.classList.add( 'fade_out' );
-					elm.classList.remove( 'fade_in' );
-				// The animation *should* takes 400 ms to complete, so I add an extra 50 ms just to be sure the function is called when it's completed.
-				chosen_timeouts[ i ] = setTimeout( () => { elm.style.display = 'none'; }, 450 );
-			}
+			chosen_one.classList.add( 'fade-out' );
+			chosen_one.classList.remove( 'fade-in' );
+			// The animation *should* takes 400 ms to complete, so I add an extra 50 ms just to be sure the function is called when it's completed.
+			chosen_timeout = setTimeout( () => { chosen_one.style.display = 'none'; }, 450 );
 
-			chosen_one = [];
-
-			circles.deselect();
+			circles.deselect( last_index );
 			canvas.onclick = click_select;
 		};
 
@@ -971,8 +962,7 @@ const fn = () => {
 				// Same goes for the elements (if we clicked off an element and then really quickly clicked back on it again for some reason...)
 				// But ONLY if the elements are the same ones we clicked off of last time, if they are different we do want them to disappear.
 				if ( last_index === THE_CHOSEN_DOCUMENT )
-					for ( elm in chosen_timeouts )
-						clearTimeout( elm );
+					clearTimeout( chosen_timeout );
 
 				// Set up the back arrow
 				arrow_obj.style.display = 'block';
@@ -985,16 +975,11 @@ const fn = () => {
 				// Show the chosen document.
 				chosen_one = DOCUMENTS[ THE_CHOSEN_DOCUMENT ]; // That's a mouthful...
 				last_index = THE_CHOSEN_DOCUMENT;
-				chosen_timeouts = [];
+				chosen_timeout = null;
 				// Loop through each element and set it to fade in.
-				console.log( chosen_one );
-				for ( let i = 0; i < chosen_one.length; i++ ) {
-					let elm = chosen_one[ i ];
-					console.log( elm );
-					elm.style.display = 'block';
-					elm.classList.add( 'fade_in' );
-					elm.classList.remove( 'fade_out' );
-				}
+				chosen_one.style.display = 'block';
+				chosen_one.classList.add( 'fade-in' );
+				chosen_one.classList.remove( 'fade-out' );
 			}
 		};
 
@@ -1088,7 +1073,7 @@ const fn = () => {
 		const nav_to = circles.click( e.clientX, canvas.height - e.clientY );
 		setTimeout( () => {
 			arrow.show( nav_to );
-		}, 600 );
+		}, 800 );
 		canvas.onclick = undefined;
 	};
 
