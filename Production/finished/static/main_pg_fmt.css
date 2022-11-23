@@ -1,15 +1,34 @@
 
 /* main p font */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;600&display=swap');
-/* italic ps */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@1,100;1,300;1,400;1,600&display=swap');
+@font-face {
+	font-family: Montserrat;
+	src: url( 'Assets/mont.ttf' ) format( 'truetype-variations' ),
+		 url( 'Assets/mont-i.ttf' ) format( 'truetype-variations' );
+	font-weight: 100 900;
+	font-style: normal italic;
+}
 /* subtitles */
-@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&display=swap');
+@font-face {
+	font-family: Comfortaa;
+	src: url( 'Assets/comf.ttf' ) format( 'truetype-variations' );
+	font-weight: 300 700;
+}
 /* code blocks / subtitlestitles maybe? */
-@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+@font-face {
+	font-family: 'Ubuntu Mono';
+	src: url( 'Assets/um.ttf' ) 	format( 'truetype' ),
+		 url( 'Assets/um-b.ttf' ) 	format( 'truetype' ),
+		 url( 'Assets/um-i.ttf' ) 	format( 'truetype' ),
+		 url( 'Assets/um-bi.ttf' ) 	format( 'truetype' );
+	font-weight: 400 700;
+	font-style: normal italic;
+}
 /* for title */
-@import url('https://fonts.googleapis.com/css2?family=Kdam+Thmor+Pro&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Code+Latin:wght@100;500&display=swap');
+@font-face {
+	font-family: 'M PLUS Code Latin';
+	src: url( 'Assets/mpcl.ttf' ) format( 'truetype-variations' );
+	font-weight: 100 700;
+}
 
 :root {
 	--pg-bm: 1.4rem;
@@ -96,6 +115,17 @@ div, a, p {
 	font-size: 1.5rem;
 	text-indent: 0;
 	text-align: center;
+	position: relative;
+	left: 10%;
+	width: 80%;
+	margin-top: calc( var( --p-m-default ) * 3 );
+	margin-bottom: calc( var( --p-m-default ) * 3 );
+}
+.page .p-big-norm {
+	font-weight: 400;
+	font-size: 1.3rem;
+/* 	text-indent: 0; */
+/* 	text-align: center; */
 	position: relative;
 	left: 10%;
 	width: 80%;
@@ -280,7 +310,6 @@ div, a, p {
 }
 
 .footer {
-
 }
 .footer p {
 	text-align: center;

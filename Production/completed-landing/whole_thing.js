@@ -309,10 +309,12 @@ const fn = () => {
 
 			// Spring equation for radius.
 			const k_r = 0.00002;
-// 			if
 			const damp = 0.04;
 			const r_pp = k_r * ( r_goal - r );
+			const max_v = 0;
 			r_p = r_p + ( r_pp ) * tDelta - r_p * damp;
+			r_p = ( r_p > max_v ? max_v : rp ) < -max_v ? -max_v : rp
+			console.log( 'r_p: ' + r_p + ', max_v: ' + max_v );
 			r = r + r_p * tDelta;
 
 			// If the radius is set to zero, it will go to zero and then come back and oscillate for a while due to the spring equation.
