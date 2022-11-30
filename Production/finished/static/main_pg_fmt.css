@@ -33,6 +33,7 @@
 :root {
 	--pg-bm: 1.4rem;
 	--pg-hm: 8vw;
+	--base-fsz: 2vmin;
 	--tit-fsz: 4.4rem;
 	--arr-sz: calc( 8vmin + var( --tit-fsz ) * 1.5 );
 	--arr-vm: calc( 1vmin + 2px );
@@ -41,8 +42,8 @@
 	--tit-lm: calc( var( --arr-hm ) * 2 + var( --arr-sz ) - var( --pg-hm ) + 1.6rem );
 	--h-m-factor: .7;
 	--p-m-default: .7rem;
-	--link-hover: #FF0000;
-	--link-idle: #00FF00;
+	--link-hover: #0A6;
+	--link-idle: #466;
 }
 
 /* margin: [top] [right] [bottom] [left]; */
@@ -77,24 +78,24 @@ div, a, p {
 .page .title {
 	margin: var( --tit-vm ) 0 var( --tit-vm ) var( --tit-lm );
 	font-family: 'M PLUS Code Latin';
-	font-size: var( --tit-fsz );
+	font-size: calc( var( --base-fsz )*0.6 + var( --tit-fsz ) - 0.6rem );
 }
 
 
 /* headers */
 .page h1, .page h2, .page h3, .page h4, .page h5 {
 	font-family: 'Ubuntu Mono'; } .page h1 {
-	font-size: 3.6rem;
+	font-size: calc( var( --base-fsz )*0.6 + 3.6rem - 0.6rem );
 	font-family: 'M PLUS Code Latin';
 	font-weight: 100;
 	margin-top: calc( 3.6rem * var( --h-m-factor ) );
 	margin-bottom: calc( 3.6rem * var( --h-m-factor ) ); } .page h2 {
-	font-size: 2.4rem;
+	font-size: calc( var( --base-fsz )*0.6 + 2.4rem - 0.6rem );
 	font-family: 'Comfortaa';
 	font-weight: 300;
 	margin-top: calc( 2.4rem * var( --h-m-factor ) );
 	margin-bottom: calc( 2.4rem * var( --h-m-factor ) ); } .page h3 {
-	font-size: 1.6rem;
+	font-size: calc( var( --base-fsz )*0.6 + 1.6rem - 0.6rem );
 	font-family: 'Montserrat';
 	font-weight: 600;
 	margin-top: calc( 1.6rem * var( --h-m-factor ) );
@@ -102,17 +103,17 @@ div, a, p {
 }
 
 /* paragraphs */
-.page p, .page a {
+.page p {
 	font-weight: 300;
 	text-indent: 3rem;
-	font-size: 1.2rem;
+	font-size: calc( var( --base-fsz )*0.6 + 1.2rem - 0.6rem );
 	line-height: 140%;
 	margin-top: var( --p-m-default );
 	margin-bottom: var( --p-m-default );
 }
 .page .p-big-c {
 	font-weight: 400;
-	font-size: 1.5rem;
+	font-size: calc( var( --base-fsz )*0.6 + 1.5rem - 0.6rem );
 	text-indent: 0;
 	text-align: center;
 	position: relative;
@@ -123,9 +124,9 @@ div, a, p {
 }
 .page .p-big-norm {
 	font-weight: 400;
-	font-size: 1.3rem;
+	font-size: calc( var( --base-fsz )*0.6 + 1.3rem - 0.6rem );
 /* 	text-indent: 0; */
-/* 	text-align: center; */
+	text-align: center;
 	position: relative;
 	left: 10%;
 	width: 80%;
@@ -301,7 +302,7 @@ div, a, p {
 }
 .cap-img p {
 	font-style: italic;
-	font-size: 0.8rem;
+	font-size: calc( var( --base-fsz )*0.6 + 0.8rem - 0.6rem );
 	text-align: center;
 	line-height: 100%;
 	max-width: 80%;
