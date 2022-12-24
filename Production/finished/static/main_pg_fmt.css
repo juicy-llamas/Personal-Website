@@ -73,6 +73,7 @@ div, a, p {
 	left: 0;
 	z-index: 2;
 	margin: 0 var( --pg-hm ) var( --pg-bm ) var( --pg-hm );
+	width: calc( 100vw - 2 * var( --pg-hm ) );
 }
 
 .page .title {
@@ -81,6 +82,10 @@ div, a, p {
 	font-size: calc( var( --base-fsz )*0.6 + var( --tit-fsz ) - 0.6rem );
 }
 
+.page .center {
+	min-height: calc( 100vh - 5.2 * var( --tit-vm ) );
+/* 	margin-bottom: calc( -2 * var( --base-fsz ) ); */
+}
 
 /* headers */
 .page h1, .page h2, .page h3, .page h4, .page h5 {
@@ -171,18 +176,14 @@ div, a, p {
 
 /* options for lr divider */
 .page .l-big {
-	float: left;
 	width: 60%;
 	margin-right: 8%;
 } .page .l-small {
-	float: left;
 	width: 34%;
 	margin-right: 8%;
 } .page .r-big {
-	float: right;
 	width: 60%;
 } .page .r-small {
-	float: right;
 	width: 34%;
 }
 /* fix for imgs in links */
@@ -207,6 +208,55 @@ div, a, p {
 .page .tri-elm {
 	margin-left: 3%;
 	margin-right: 3%;
+}
+
+/* media queries for horizontal displays */
+@media screen and (max-width: 1660px) {
+	.page .lr-divider, .page .tri-divider {
+		flex-direction: column;
+		align-items: center;
+	}
+	.page .l-big {
+		width: 100%;
+		margin-right: 0;
+		margin-bottom: 6vh;
+	} .page .l-small {
+		width: 100%;
+		margin-right: 0;
+		margin-bottom: 6vh;
+	} .page .r-big {
+		width: 100%;
+	} .page .r-small {
+		width: 100%;
+	}
+	.page .l-big img, .page img.l-big, .page .l-small img, .page img.l-small, .page .r-big img, .page img.r-big, .page .r-small img, .page img.r-small {
+		width: 50%;
+	}
+
+	/* tri divider; you can set the divisions with margins */
+	.page .tri-divider > * {
+		width: 100%;
+	}
+	/* quick and easy way to do just that */
+	.page .tri-l {
+		margin-right: 0;
+		margin-bottom: 3vh;
+	} .page .tri-c {
+		margin-left: 0;
+		margin-right: 0;
+		margin-top: 3vh;
+		margin-bottom: 3vh;
+	} .page .tri-r {
+		margin-right: 0;
+		margin-top: 3vh;
+	}
+	/* another quick and easy way */
+	.page .tri-elm {
+		margin-left: 0;
+		margin-right: 0;
+		margin-top: 3vh;
+		margin-bottom: 3vh;
+	}
 }
 
 .page .emph-border {
@@ -310,9 +360,12 @@ div, a, p {
 	text-indent: 0;
 }
 
-.footer {
+.page .footer {
+	margin-top: calc( var( --base-fsz ) );
+	margin-bottom: calc( 2 * var( --base-fsz ) );
+	width: 100%;
 }
-.footer p {
+.page .footer p {
 	text-align: center;
 	text-indent: 0;
 }
