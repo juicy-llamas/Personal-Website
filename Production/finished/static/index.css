@@ -11,7 +11,7 @@
 
 :root {
 /* 	dis should be circle diameter, perhaps set w js */
-	--crc-txt-sz: 18vmin;
+	--crc-txt-sz: 30em;
 }
 
 * {
@@ -34,14 +34,47 @@ body {
 }
 
 .site-header {
+	position: absolute;
 	text-align: center;
-	width: 100vw;
+	width: 90vw;
+	left: 5vw;
 	font-size: 4.4rem;
 	font-family: 'M PLUS Code Latin';
 	font-weight: 300;
 	margin-top: calc( 3.6rem * var( --h-m-factor ) );
-	margin-bottom: calc( 3.6rem * var( --h-m-factor ) );
+	margin-bottom: calc( 2.4rem * var( --h-m-factor ) );
 	color: #013;
+}
+
+#chrome-notice {
+	position: absolute;
+	font-family: 'Montserrat', sans-serif;
+	left: calc( 50vw + 18rem );
+	top: calc( 3.6rem * var( --h-m-factor ) + 0.6rem );
+	width: 14rem;
+	font-size: 1.2em;
+	color: #555;
+	margin-bottom: 8px;
+}
+
+@media screen and (max-width: 1024px) {
+	#chrome-notice {
+		left: calc( 50vw - 12rem );
+		top: calc( 3.6rem * var( --h-m-factor ) * 2 + 4.4rem );
+		width: 24rem;
+		text-align: center;
+	}
+}
+
+@media screen and (max-width: 508px) {
+	#chrome-notice {
+		left: calc( 10vw );
+		top: calc( 3.6rem * var( --h-m-factor ) * 2 + 4.4rem );
+		width: 80vw;
+	}
+	.site-header {
+		font-size: calc( 2.2rem + 4vw );
+	}
 }
 
 .gl_image {
@@ -70,7 +103,7 @@ body {
 	text-align: center;
 /* 	dis should be circle diameter, perhaps set w js */
 	max-width: var( --crc-txt-sz );
-	font-size: 4vmin;
+	font-size: calc( var( --crc-txt-sz ) / 8 );
 	font-family: 'Montserrat', sans-serif;
 	pointer-events: none;
 }

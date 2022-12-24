@@ -15,10 +15,24 @@ const fn = () => {
 	const canvas = document.getElementById( "screen" );
 	const gl = canvas.getContext( 'webgl2' );
 	const image = document.getElementById( "image" );
-	
-	if ( canvas === undefined ) console.err( "Your browser does not support Canvas." );
-	if ( gl === undefined ) console.err( "Your browser does not suppport WebGL2 (WebGL1 won't work)." );
-	if ( image === undefined ) console.err( "Problem loading image." );
+	const isundef = ( elm ) => elm === undefined || elm === null;
+
+	{
+		let gg = 0;
+		const perror = ( e ) => {
+			console.error( e );
+			const t = document.createElement( 'p' );
+			document.getElementsByClassName( 'content' )[ 0 ].remove();
+			t.innerHTML = e + "<br \\>:(";
+			t.style.margin = '24px';
+			document.body.append( t );
+			gg = 1;
+		};
+		if ( isundef( canvas ) ) perror( "Your browser does not support Canvas." );
+		if ( isundef( gl ) || isundef( gl.viewport ) ) perror( "Your browser does not suppport WebGL2 (WebGL1 won't work)." );
+		if ( isundef( image ) ) perror( "Problem loading image." );
+		if ( gg === 1 ) return;
+	}
 
 //	initial resize before we do anything
 	canvas.width = window.innerWidth;
@@ -297,6 +311,7 @@ const fn = () => {
 			];
 		};
 
+		let k = 0;
 		const updateCircle/*s?*/ = ( index ) => {
 //			Every element of the circle array listed out by name.
 			const cx = this.circles[ index * CIRCLES_SIZE + 0 ];
@@ -316,12 +331,18 @@ const fn = () => {
 			r = r == Infinity || r == NaN ? REST_R : r;
 
 //			Spring equation for radius.
-			const k_r = 0.000016;
+			const k_r = 0.000018;
 			const diff = r_goal - r;
-			const damp = Math.clamp( 0.966 + 0.0012 * Math.abs( diff ) - 0.18 * Math.abs( r_p ), 0.96, 0.76 );
+			const damp = Math.clamp( 1 + Math.abs( diff ) * 0.0006 - 0.4 * Math.max( Math.abs( r_p ) - 0.3, 0 ) , 0.99, 0.02 );
 			const r_pp = k_r * diff;
-			r_p = Math.clamp( r_p * damp + r_pp * 10/*tDelta*/, 2, -2 );
+			r_p = r_p * damp + r_pp * tDelta;//Math.clamp( r_p * damp + r_pp * tDelta, 2.4, -2.4 );
 			r = r + r_p * tDelta;
+
+// 			if ( index === 2 && k >= 32 ) {
+// 				console.log( `rpp = ${r_pp}, rp = ${r_p}, r = ${r}` );
+// 				k = 0;
+// 			}
+// 			k += 1;
 
 //			If the radius is set to zero, it will go to zero and then come back and oscillate for a while due to the spring equation.
 //			The 'zeroed' variable makes sure that if the radius is set to zero when naving, it does not bounce up (I just thought that looked really weird and didn't much care for it).
@@ -395,6 +416,7 @@ const fn = () => {
 		let REST_R = 0;
 		let EXP_R = 0;
 		let PAD = 0;
+		let PADW = 0;
 		let DIST = 0;
 
 		const set_r_consts = () => {
@@ -410,9 +432,12 @@ const fn = () => {
 //			console.log( mn * 0.36 );
 //			console.log( REST_R );
 //			console.log( "=============================" );
-			EXP_R = REST_R * 1.2;
-			PAD = EXP_R * 1.5;
-			DIST = PAD * 1.4;
+			EXP_R = REST_R * 1.1;
+			PAD = EXP_R * 1.9;
+			PADW = EXP_R * 1.4;
+			DIST = PAD * 1.3;
+
+			document.querySelector( ':root' ).style.setProperty( '--crc-txt-sz', ( REST_R * 2 ) + 'px' );
 		}
 		set_r_consts();
 
@@ -422,7 +447,13 @@ const fn = () => {
 			let best_config = [];
 			let best_error = 50000001;
 			this.circles = [];
-			const header = document.getElementsByClassName( 'site-header' )[ 0 ].clientHeight;
+
+			const header = ( ( head, note )  => {
+				const note_head = note.style.display == 'none' ? 0 : note.clientHeight + 64;
+				const site_head = head.clientHeight;
+				return canvas.width > 1024 ? Math.max( note_head, site_head ) : note_head + site_head;
+			} )( document.getElementById( 'chrome-notice' ), document.getElementsByClassName( 'site-header' )[ 0 ] );
+
 			const canvas_height = canvas.height - header;
 // 			center of screen
 			const cenx = cw;
@@ -437,17 +468,17 @@ const fn = () => {
 
 // 				Initialize the first circle at one of the 'walls'
 				if ( canvas.width < canvas.height ) {
-					xOrig = Math.random() * ( canvas.width - 2 * PAD ) + PAD;
+					xOrig = Math.random() * ( canvas.width - 2 * PADW ) + PADW;
 
 					let k = Math.random();
-					yOrig = k > 0.5 ? PAD : canvas_height - PAD;
+					yOrig = k > 0.5 ? PADW : canvas_height - PADW;
 // 					aim at center of screen
 // 					angAdd = k > 0.5 ? 0 : Math.PI;
 				} else {
-					yOrig = Math.random() * ( canvas_height - 2 * PAD ) + PAD;
+					yOrig = Math.random() * ( canvas_height - 2 * PADW ) + PADW;
 
 					let k = Math.random();
-					xOrig = k > 0.5 ? PAD : canvas.width - PAD;
+					xOrig = k > 0.5 ? PADW : canvas.width - PADW;
 // 					angAdd = k > 0.5 ? 3 * Math.PI / 2 : Math.PI / 2;
 				}
 
@@ -458,6 +489,7 @@ const fn = () => {
 
 // 					randomly choose an angle for circle
 					let theta = Math.random() * 2 * Math.PI;
+					let rdist = 0;
 					let cx = this_config[ 2*i - 2 ] + DIST * Math.cos( theta );
 					let cy = this_config[ 2*i - 1 ] + DIST * Math.sin( theta );
 
@@ -467,13 +499,14 @@ const fn = () => {
 
 					const check = () => {
 						const plusx = ( x ) => x > 0 ? x : 0;
-						let error = plusx( PAD - cx ) + plusx( cx - ( canvas.width - PAD ) ) + plusx( PAD - cy ) + plusx( cy - ( canvas_height - PAD ) );
+						let error = plusx( PADW - cx ) + plusx( cx - ( canvas.width - PADW ) ) + plusx( PADW - cy ) + plusx( cy - ( canvas_height - PADW ) );
+						error *= 2 * error;
 
 						for ( let j = 0; j <= i; j++ ) {
 							let x = cx - this_config[ j * 2 ];
 							let y = cy - this_config[ j * 2 + 1 ];
 							let squ = x * x + y * y;
-							error += plusx( DIST * DIST - squ );
+							error += plusx( PAD * PAD - squ );
 						}
 
 // 						console.log( `x: ${cx}, y: ${cy}, e: ${error}` );
@@ -489,12 +522,13 @@ const fn = () => {
 							return false;
 					};
 
-					const max_atts = 28;
+					const max_atts = 32;
 					let limit = max_atts;
 					while ( check() && limit > 0 ) {
 						theta = Math.random() * 2 * Math.PI;
-						cx = this_config[ 2*i - 2 ] + DIST * Math.cos( theta );
-						cy = this_config[ 2*i - 1 ] + DIST * Math.sin( theta );
+						rdist = DIST * ( 0.8 + 0.2 * Math.random() );
+						cx = this_config[ 2*i - 2 ] + rdist * Math.cos( theta );
+						cy = this_config[ 2*i - 1 ] + rdist * Math.sin( theta );
 						limit -= 1;
 					}
 
@@ -512,8 +546,7 @@ const fn = () => {
 				if ( this_error < best_error ) {
 					best_error = this_error;
 					best_config = this_config;
-					console.log( best_error );
-					console.log( best_config );
+					console.log( 'best_err: ' + best_error );
 				}
 			}
 
@@ -525,7 +558,7 @@ const fn = () => {
 				createCircle( best_config[ i*2 ], best_config[ i*2 + 1 ], REST_R, RESTING_SPIN_RATE, angle_offset, i + 1 );
 			}
 		};
-		gen_circles( 28 );
+		gen_circles( 128 );
 		
 		const arcBuffer = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
@@ -653,6 +686,7 @@ const fn = () => {
 
 //		Sets the circles' r and spin to their original defaults.
 		this.reset = ( pageLeave ) => {
+			console.log( 'reset' );
 //			If we are normally navving, keep all circles at rest on nav away.
 			if ( SELECTED_STATE === false ) {
 				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
@@ -699,12 +733,6 @@ const fn = () => {
 						this.circles[ i * CIRCLES_SIZE + 7 ] = true;
 					}, 200 );
 				}
-
-//				Fade out the text and turn it off after the fade is done.
-				setTimeout( () => {
-					this.circles[ i * CIRCLES_SIZE + 8 ].style.display = 'none';
-				}, 300 );
-				this.circles[ i * CIRCLES_SIZE + 8 ].className = 'circle-text fade-out';
 			}
 
 //			Disable mouse movement
@@ -739,18 +767,13 @@ const fn = () => {
 
 //		Resets the nav.
 		this.deselect = ( i ) => {
-			SELECTED_STATE = false;
 			this.circles[ i * CIRCLES_SIZE + 4 ] = REST_R;
 			this.circles[ i * CIRCLES_SIZE + 6 ] = RESTING_SPIN_RATE;
 			this.circles[ i * CIRCLES_SIZE + 7 ] = false;
 			setTimeout( () => {
-				this.reset();
-				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
-					this.circles[ i * CIRCLES_SIZE + 8 ].style.display = 'block';
-					this.circles[ i * CIRCLES_SIZE + 8 ].className = 'circle-text fade-in';
-				}
+				SELECTED_STATE = false;
+				this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 			}, 600 );
-			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 		};
 	} )();
 	
@@ -816,11 +839,12 @@ const fn = () => {
 		gl.uniform1i( Ufg, 0 );
 
 //		Resolution of the image
-		const res_x = 3840;
-		const res_y = 2160;
-//		Not really the center, but a point we will center our calculations for the texture coords around.
-		const center_x = 1 - 1275 / 5160;
-		const center_y = 1 - 1419 / 2871;
+		const res_x = 4684 * 0.5;
+		const res_y = 2387 * 0.5;
+//		~~Not really the center, but a point we will center our calculations for the texture coords around.~~
+// 		Yes, the actual center, because contrast..
+		const center_x = .5;//1 - 1275 / 5160;
+		const center_y = .5;//1 - 1419 / 2871;
 		
 //		Scaling the image to the width of the screen.
 		let scale_x = Math.min( 1, 2 * canvas.width / res_x );
@@ -951,7 +975,7 @@ const fn = () => {
 //		Arrow object (is constant for every document)
 		const arrow_obj = document.getElementById( "back-arrow" );
 
-		const site_header = document.getElementsByClassName( "site-header" );
+		const hide_objs = document.getElementsByClassName( 'disappear-on-circle' );
 
 //		Chosen document
 		let chosen_one = null;
@@ -981,13 +1005,14 @@ const fn = () => {
 //			The animation *should* takes 400 ms to complete, so I add an extra 50 ms just to be sure the function is called when it's completed.
 			chosen_timeout = setTimeout( () => {
 				chosen_one.style.display = 'none';
-				for ( const e of site_header ) {
+				for ( const e of hide_objs ) {
 					e.classList.add( 'fade-in' );
 					e.classList.remove( 'fade-out' );
 					e.style.display = 'block';
 				}
 			}, 450 );
 
+// 			restore circles and click event
 			circles.deselect( last_index );
 			canvas.onclick = click_select;
 		};
@@ -1045,14 +1070,14 @@ const fn = () => {
 		}
 	} )();
 	
-	let ctr = 0;
+// 	let ctr = 0;
 	const animate = ( tNow ) => {
 		tDelta = tNow - tPrev;
-		if ( ctr === 128 ) {
-			console.log( tDelta );
-			ctr = 0;
-		} else
-			ctr++;
+// 		if ( ctr === 128 ) {
+// 			console.log( tDelta );
+// 			ctr = 0;
+// 		} else
+// 			ctr++;
 		
 		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
@@ -1123,18 +1148,23 @@ const fn = () => {
 			arrow.show( nav_to );
 		}, 800 );
 
+		console.log( nav_to );
 		if ( nav_to !== -1 ) {
 //			Fade out site title.
-			const site_header = document.getElementsByClassName( 'site-header' );
-			for ( e of site_header ) {
+			const hide_objs = document.getElementsByClassName( 'disappear-on-circle' );
+			for ( let i = 0; i < hide_objs.length; i++ ) {
+				let e = hide_objs[ i ];
 				e.classList.add( 'fade-out' );
 				e.classList.remove( 'fade-in' );
-				setTimeout( 450, () => { e.style.display = 'none'; } );
+				setTimeout( () => { console.log( 'EHELEHELRE' ); e.style.display = 'none'; }, 450 );
 			}
+			canvas.onclick = undefined;
 		}
-
-		canvas.onclick = undefined;
 	};
+
+// 	chrome warning
+// 	let chromeWarning = document.getElementById( 'chrome-notice' );
+// 	if ( ( window.chrome !== undefined && window.chrome !== null ) || window.navigator.userAgent.indexOf( 'Chrome' ) !== -1 ) chromeWarning.style.display = 'none';
 
 //	Do a resize to sync everything (technically undoes some init work but whatever)
 	resize();
