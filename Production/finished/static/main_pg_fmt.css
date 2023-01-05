@@ -35,7 +35,7 @@
 	--pg-hm: 8vw;
 	--base-fsz: 2vmin;
 	--tit-fsz: 4.4rem;
-	--arr-sz: calc( 8vmin + var( --tit-fsz ) * 1.5 );
+	--arr-sz: calc( 10vmin + var( --tit-fsz ) * 1 );
 	--arr-vm: calc( 1vmin + 2px );
 	--arr-hm: calc( 1vmin + 12px );
 	--tit-vm: calc( ( var( --arr-sz ) + 2 * var( --arr-vm ) - 1.34 * var( --tit-fsz ) ) / 2 );
@@ -59,6 +59,8 @@
 	opacity: .7;
 /* 	Arrow will start off not displaying since nothing's selected.*/
 	display: none;
+	/* fix bug */
+	z-index: 3;
 }
 
 div, a, p {
@@ -80,6 +82,14 @@ div, a, p {
 	margin: var( --tit-vm ) 0 var( --tit-vm ) var( --tit-lm );
 	font-family: 'M PLUS Code Latin';
 	font-size: calc( var( --base-fsz )*0.6 + var( --tit-fsz ) - 0.6rem );
+}
+
+@media screen and ( max-width: 480px ) {
+	.page .title {
+		margin: calc( var( --tit-lm ) * 3 / 4 ) 0 2rem;
+		width: 100%;
+		text-align: center;
+	}
 }
 
 .page .center {
@@ -111,14 +121,14 @@ div, a, p {
 .page p {
 	font-weight: 300;
 	text-indent: 3rem;
-	font-size: calc( var( --base-fsz )*0.6 + 1.2rem - 0.6rem );
+	font-size: calc( var( --base-fsz )*0.6 + 1.4rem - 0.6rem );
 	line-height: 140%;
 	margin-top: var( --p-m-default );
 	margin-bottom: var( --p-m-default );
 }
 .page .p-big-c {
 	font-weight: 400;
-	font-size: calc( var( --base-fsz )*0.6 + 1.5rem - 0.6rem );
+	font-size: calc( var( --base-fsz )*0.6 + 1.6rem - 0.6rem );
 	text-indent: 0;
 	text-align: center;
 	position: relative;
@@ -129,7 +139,7 @@ div, a, p {
 }
 .page .p-big-norm {
 	font-weight: 400;
-	font-size: calc( var( --base-fsz )*0.6 + 1.3rem - 0.6rem );
+	font-size: calc( var( --base-fsz )*0.6 + 1.5rem - 0.6rem );
 /* 	text-indent: 0; */
 	text-align: center;
 	position: relative;
@@ -264,7 +274,7 @@ div, a, p {
 	border-radius: calc( 2 * var( --p-m-default ) );
 	margin-top: calc( 2 * var( --p-m-default ) );
 	margin-bottom: calc( 2 * var( --p-m-default ) );
-	padding: calc( 4 * var( --p-m-default ) );
+	padding: calc( 2.4 * var( --p-m-default ) + 4vmin );
 } .page .emph-border:first-child {
 	margin-top: 0;
 } .page .emph-border:last-child {
@@ -272,14 +282,25 @@ div, a, p {
 }
 
 .page .piped-list {
+	max-width: 100%;
 	display: flex;
 	flex-flow: row;
+	align-items: center;
 }
 .page .piped-list .left {
-	padding-right: 2rem;
+	padding-right: calc( 0.6rem + 1vw );
 	border-right: 0.2rem solid;
 } .page .piped-list .right {
-	margin-left: 2rem;
+	margin-left: calc( 0.6rem + 1vw );
+}
+
+.page .contacts * {
+	overflow-wrap: break-word;
+}
+.page .contacts a, .page .contacts h3 {
+	display: block;
+	max-width: calc( 40vw - 4 * var( --p-m-default ) );
+	font-size: calc( var( --base-fsz ) * 1.6 + .6rem );
 }
 
 /* icon dock stuff */
