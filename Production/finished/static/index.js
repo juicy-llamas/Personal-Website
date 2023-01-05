@@ -7,18 +7,65 @@
 
 "use strict";
 
+{
+	function perror ( e ) {
+		console.error( e );
+		const t = document.createElement( 'p' );
+		document.getElementsByClassName( 'content' )[ 0 ].remove();
+		t.innerHTML = e + "<br />:(";
+		t.style.margin = '24px';
+		document.body.append( t );
+		gg = 1;
+	}
+	try {
+		eval( '"use strict"; let foo = () => true;' );
+	} catch {
+		perror( 'Your browser doesn\'t support ES6' );
+		throw new Error( 'ES6 is required' );
+	}
+}
+
 Math.clamp = ( e, g, l ) => e > g ? g : ( e < l ? l : e );
 
+const _tfind = ( t, f ) => {
+	for ( let i = 0; i < t.length; i++ ) {
+		const res = f( t.item( i ), i );
+		if ( res ) return t.item( i );
+	}
+	return undefined;
+}
+const _tany = ( t, f ) => {
+	for ( let i = 0; i < t.length; i++ ) {
+		const res = f( t.item( i ), i );
+		if ( res ) return true;
+	}
+	return false;
+}
+
 //Need to execute this on the window load, so it's in a function.
-const fn = () => {
+const fn = async function () {
 //	Getting variables. For now it's webgl2, but honestly I don't need webgl2, so I might just revert it to webgl1.
 	const canvas = document.getElementById( "screen" );
 	const gl = canvas.getContext( 'webgl2' );
 	const image = document.getElementById( "image" );
-	const isundef = ( elm ) => elm === undefined || elm === null;
+	const isundef = ( elm ) => elm === undefined || elm === null;	
+
+//	chrome warning; need to put here b.c. 
+//	also mobile instructions for use
+	{
+		let chromeWarning = document.getElementById( 'chrome-notice' );
+		let isMobile = window.navigator.userAgent.toLowerCase();
+		isMobile = isMobile.indexOf( 'mobile' ) >= 0 ||
+				   isMobile.indexOf( 'phone' ) >= 0 ||
+				   isMobile.indexOf( 'ios' ) >= 0 ||
+				   isMobile.indexOf( 'andrioid' ) >= 0;
+		let isChrome = ( window.chrome !== undefined && window.chrome !== null ) || 
+						window.navigator.userAgent.indexOf( 'Chrome' ) !== -1;
+		if ( isMobile ) chromeWarning.innerHTML = 'Brush or drag your finger across the screen.' + ( !isChrome ? ' ' + chromeWarning.innerHTML : '' );
+		if ( isChrome && !isMobile ) chromeWarning.style.display = 'none';
+	}
 
 	{
-		let gg = 0;
 		const perror = ( e ) => {
 			console.error( e );
 			const t = document.createElement( 'p' );
@@ -26,13 +73,34 @@ const fn = () => {
 			t.innerHTML = e + "<br \\>:(";
 			t.style.margin = '24px';
 			document.body.append( t );
-			gg = 1;
+			throw new Error( 'Something went wrong--see page' );
 		};
-		if ( isundef( canvas ) ) perror( "Your browser does not support Canvas." );
+		if ( isundef( canvas ) ) perror( "Your browser does not support canvas." );
 		if ( isundef( gl ) || isundef( gl.viewport ) ) perror( "Your browser does not suppport WebGL2 (WebGL1 won't work)." );
 		if ( isundef( image ) ) perror( "Problem loading image." );
-		if ( gg === 1 ) return;
 	}
+
+	const glErrStr = ( num ) => {
+		switch ( num ) {
+			case gl.NO_ERROR:
+				return "WebGL: NO_ERROR (were you expecting one?)";
+			case gl.INVALID_ENUM:
+				return "WebGL: INVALID_ENUM";
+			case gl.INVALID_VALUE:
+				return "WebGL: INVALID_VALUE";
+			case gl.INVALID_OPERATION:
+				return "WebGL: INVALID_OPERATION";
+			case gl.INVALID_FRAMEBUFFER_OPERATION:
+				return "WebGL: INVALID_FRAMEBUFFER_OPERATION";
+			case gl.OUT_OF_MEMORY:
+				return "WebGL: OUT_OF_MEMORY";
+			case gl.CONTEXT_LOST_WEBGL:
+				return "WebGL: CONTEXT_LOST_WEBGL";
+			default:
+				return ("WebGL threw an undefined error!");
+		}
+	}
+	gl.getErrorStr = () => glErrStr( gl.getError() );
 
 //	initial resize before we do anything
 	canvas.width = window.innerWidth;
@@ -46,6 +114,7 @@ const fn = () => {
 	let tDelta = 0;
 	let mx = -1;
 	let my = -1;
+	let currentPointer = null;
 
 //	To hold the requestAnimationFrame so we can stop it.
 	let animFrame = null;
@@ -53,8 +122,8 @@ const fn = () => {
 //	This resizes the gl viewport, sets the color to all zeros (white), and enables blending so we can use opacity in an intuitive sense.
 	gl.viewport( 0, 0, canvas.width, canvas.height );
 	gl.clearColor( 0.0, 0.0, 0.0, 0.0 );
-	gl.clearDepth( 1.0 );				// Clear everything
-	gl.enable( gl.BLEND );				// Enable bLENDING
+	gl.clearDepth( 1.0 );//				Clear everything
+	gl.enable( gl.BLEND );//				Enable bLENDING
 	gl.disable( gl.DEPTH_TEST );
 	gl.blendFunc( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA );
 
@@ -64,15 +133,15 @@ const fn = () => {
 		gl.shaderSource( ret, src );
 		gl.compileShader( ret );
 
-		return ret;
-//		if ( gl.getShaderParameter( ret, gl.COMPILE_STATUS ) )
-//			return ret;
-//		else {
-//			The error message outputs the type of shader or undefined, this works for my purposes even though I miss others like the geometry shader.
-//			const typStr = type === gl.VERTEX_SHADER ? "vertex shader" : ( type === gl.FRAGMENT_SHADER ?
-//					"fragment shader" : "undefined shader" );
-//			console.error( "a(n) " + typStr + " shader did not compile: " + gl.getShaderInfoLog( ret ) );
-//		}
+		// return ret;
+		if ( gl.getShaderParameter( ret, gl.COMPILE_STATUS ) )
+			return ret;
+		else {
+			// The error message outputs the type of shader or undefined, this works for my purposes even though I miss others like the geometry shader.
+			const typStr = type === gl.VERTEX_SHADER ? "vertex shader" : ( type === gl.FRAGMENT_SHADER ?
+					"fragment shader" : "undefined shader" );
+			console.error( "a(n) " + typStr + " shader did not compile: " + gl.getShaderInfoLog( ret ) );
+		}
 	};
 	
 //	Simple helper function to compiler a program.
@@ -178,7 +247,11 @@ const fn = () => {
 			#define PI radians( 180. )
 			#define TUPI radians( 360. )
 
-			precision mediump float;
+			#ifdef GL_FRAGMENT_PRECISION_HIGH
+				precision highp float;
+			#else
+				precision mediump float;
+			#endif
 
 			varying vec2 Vcenter;
 			varying vec2 VR;
@@ -187,10 +260,18 @@ const fn = () => {
 			varying vec4 Vcolor;
 
 			void main () {
-				vec2 R2 = VR * VR;
 				vec2 diff = gl_FragCoord.xy - Vcenter;
-				float dist = dot( diff, diff );
 				float alpha = 0.;
+//				There was an issue with the squares overflowing the float val, so I had to change to highp.
+// 				But, highp is not universally supported, so I can fall back to mediump 
+				#ifndef GL_FRAGMENT_PRECISION_HIGH
+					vec2 R2 = VR;
+					vec2 dist = vec2( dot( diff / VR.x, diff ), dot( diff / VR.y, diff ) );
+				#else
+					vec2 R2 = VR * VR;
+					float dotp = dot( diff, diff );
+					vec2 dist = vec2( dotp, dotp );
+				#endif
 				
 				#ifdef GL_OES_standard_derivatives
 				float delta = fwidth( dist );
@@ -198,9 +279,14 @@ const fn = () => {
 				#else
 				float delta = 2. * VR.x;
 				#endif
-				
+
+//				With the altdelta was too big, so I 4th rooted it.
+				#ifndef GL_FRAGMENT_PRECISION_HIGH
+					delta = pow( delta, 1./4. );
+				#endif
+
 //				Fixed hole-in-the-circle problem, may make this better later.
-				if ( dist < R2.x - delta && R2.y == 0. ) {
+				if ( dist.x < R2.x - delta && R2.y == 0. ) {
 					alpha = 1.;
 				} else {
 					/*
@@ -210,13 +296,13 @@ const fn = () => {
 					float theta = atan( -diff.y, -diff.x ) + PI;
 
 					float deltaT = 0.015;
-					alpha = 1.0 - smoothstep( R2.x - delta, R2.x + delta, dist )
-								- smoothstep( R2.y + delta, R2.y - delta, dist );
+					alpha = 1.0 - smoothstep( R2.x - delta, R2.x + delta, dist.x )
+								- smoothstep( R2.y + delta, R2.y - delta, dist.y );
 
-					if ( Vang2 <= TUPI ) {
+					if ( Vang2 < TUPI ) {
 						if ( Vang2 > Vang1 ) {
 							alpha = alpha - smoothstep( Vang1 + deltaT, Vang1 - deltaT, theta )
-										- smoothstep( Vang2 - deltaT, Vang2 + deltaT, theta );
+										  - smoothstep( Vang2 - deltaT, Vang2 + deltaT, theta );
 						} else {
 							if ( theta > Vang2 + deltaT ) {
 								alpha = alpha - smoothstep( Vang1 + deltaT, Vang1 - deltaT, theta );
@@ -228,8 +314,8 @@ const fn = () => {
 					
 					alpha = clamp( alpha, 0., 1. );
 
-					if ( alpha == 0. )
-						discard;
+					// if ( alpha == 0. )
+					// 	discard;
 				}
 				
 				gl_FragColor = vec4( Vcolor.rgb, Vcolor.a * alpha );
@@ -261,7 +347,7 @@ const fn = () => {
 		
 //		Defines spin rates (resting is initial, when you first move your mouse over a circle it speeds up to spinny, and when it hits SPINNY_SPIN_RATE - SPIN_TOLERANCE or above, it drops down to OVER_SPIN_RATE.
 		const RESTING_SPIN_RATE = .2;
-		const SPINNY_SPIN_RATE = 12;
+		const SPINNY_SPIN_RATE = 8;
 		const OVER_SPIN_RATE = 0;
 		const SPIN_TOLERANCE = 0.01;
 		
@@ -277,7 +363,7 @@ const fn = () => {
 		let circleData = [];
 //		Bookeeping array that contains calculation information we need
 		this.circles = [];
-		//
+//		
 		
 		const colorCenter = [ 0.745, 0.960, 0.976, 0.8 ];
 		const colorSides = [ 0.745, 0.960, 0.976, 0.8 ];
@@ -323,7 +409,7 @@ const fn = () => {
 			let spin_goal = this.circles[ index * CIRCLES_SIZE + 6 ];
 			const zeroed = this.circles[ index * CIRCLES_SIZE + 7 ];
 
-// 			This is to hopefully prevent gridlocked cases (sometimes the outer rings are solid or the circles are blown up).
+//			This is to hopefully prevent gridlocked cases (sometimes the outer rings are solid or the circles are blown up).
 			r_goal = r_goal == Infinity || r_goal == NaN ? REST_R : r_goal;
 			spin_goal = spin_goal == Infinity || spin_goal == NaN ? RESTING_SPIN_RATE : spin_goal;
 			spin = spin == Infinity || spin == NaN ? RESTING_SPIN_RATE : spin;
@@ -331,18 +417,20 @@ const fn = () => {
 			r = r == Infinity || r == NaN ? REST_R : r;
 
 //			Spring equation for radius.
-			const k_r = 0.000018;
+			const k_r = 0.022;
 			const diff = r_goal - r;
-			const damp = Math.clamp( 1 + Math.abs( diff ) * 0.0006 - 0.4 * Math.max( Math.abs( r_p ) - 0.3, 0 ) , 0.99, 0.02 );
+//			I wanted the circles to be springy with low values, but not so springy that they will fall into themselves with high values. 
+//			I also wanted them to expand and contract quickly though. Hence, this weird experimentally derived equation.
+			const damp = Math.clamp( 1 + Math.abs( diff ) * 0.0124 - 0.24 * Math.max( Math.abs( r_p ) - 0.36, 0 ) , 0.986, 0.02 );
 			const r_pp = k_r * diff;
 			r_p = r_p * damp + r_pp * tDelta;//Math.clamp( r_p * damp + r_pp * tDelta, 2.4, -2.4 );
 			r = r + r_p * tDelta;
 
-// 			if ( index === 2 && k >= 32 ) {
-// 				console.log( `rpp = ${r_pp}, rp = ${r_p}, r = ${r}` );
-// 				k = 0;
-// 			}
-// 			k += 1;
+			if ( index === 2 && k >= 128 ) {
+				console.log( `td = ${tDelta}` );
+				k = 0;
+			}
+			k += 1;
 
 //			If the radius is set to zero, it will go to zero and then come back and oscillate for a while due to the spring equation.
 //			The 'zeroed' variable makes sure that if the radius is set to zero when naving, it does not bounce up (I just thought that looked really weird and didn't much care for it).
@@ -352,16 +440,16 @@ const fn = () => {
 			}
 			
 //			Spring equation for spin, looks large because of the state bookeeping but it's really not.
-			let k_spin = 0.005;
+			let k_spin = 0.05;
 			switch ( spin_goal ) {
 				case RESTING_SPIN_RATE:
-					k_spin = 0.003;
+					k_spin = 0.04;
 					break;
 				case SPINNY_SPIN_RATE:
-					k_spin = 0.01;
+					k_spin = .108;
 					break;
 				case OVER_SPIN_RATE:
-					k_spin = 0.003;
+					k_spin = 0.04;
 					break;
 			}
 			const spin_p = k_spin * ( spin_goal - spin );
@@ -398,7 +486,7 @@ const fn = () => {
 			const thr = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 4 ];
 			const fou = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 5 ];
 //			Spin rate is in radians per sec, and we approximate that by accounting for passed time and converting to ms.
-			const rate = spin * tDelta / 1000;
+			const rate = spin * tDelta / (125 / 3);
 
 //			We load the angles into the array such that they don't go past 2 * Math.PI.
 			circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 4 ] = one + rate >= 2 * Math.PI ? one + rate - 2 * Math.PI : one + rate;
@@ -455,7 +543,7 @@ const fn = () => {
 			} )( document.getElementById( 'chrome-notice' ), document.getElementsByClassName( 'site-header' )[ 0 ] );
 
 			const canvas_height = canvas.height - header;
-// 			center of screen
+//			center of screen
 			const cenx = cw;
 			const cenh = canvas_height / 2;
 
@@ -466,20 +554,20 @@ const fn = () => {
 				let yOrig = 0;
 				let angAdd = 0;
 
-// 				Initialize the first circle at one of the 'walls'
+//				Initialize the first circle at one of the 'walls'
 				if ( canvas.width < canvas.height ) {
 					xOrig = Math.random() * ( canvas.width - 2 * PADW ) + PADW;
 
 					let k = Math.random();
 					yOrig = k > 0.5 ? PADW : canvas_height - PADW;
-// 					aim at center of screen
-// 					angAdd = k > 0.5 ? 0 : Math.PI;
+//					aim at center of screen
+//					angAdd = k > 0.5 ? 0 : Math.PI;
 				} else {
 					yOrig = Math.random() * ( canvas_height - 2 * PADW ) + PADW;
 
 					let k = Math.random();
 					xOrig = k > 0.5 ? PADW : canvas.width - PADW;
-// 					angAdd = k > 0.5 ? 3 * Math.PI / 2 : Math.PI / 2;
+//					angAdd = k > 0.5 ? 3 * Math.PI / 2 : Math.PI / 2;
 				}
 
 				this_config[ 0 ] = xOrig;
@@ -487,7 +575,7 @@ const fn = () => {
 
 				for ( let i = 1; i < NUM_OF_CIRCLES; i++ ) {
 
-// 					randomly choose an angle for circle
+//					randomly choose an angle for circle
 					let theta = Math.random() * 2 * Math.PI;
 					let rdist = 0;
 					let cx = this_config[ 2*i - 2 ] + DIST * Math.cos( theta );
@@ -509,7 +597,7 @@ const fn = () => {
 							error += plusx( PAD * PAD - squ );
 						}
 
-// 						console.log( `x: ${cx}, y: ${cy}, e: ${error}` );
+//						console.log( `x: ${cx}, y: ${cy}, e: ${error}` );
 
 						if ( error > 0 ) {
 							if ( error < bestError ) {
@@ -537,7 +625,7 @@ const fn = () => {
 						cy = besty;
 					}
 
-// 					put the data in for the circle
+//					put the data in for the circle
 					this_config[ i*2 ] = cx;
 					this_config[ i*2 + 1 ] = cy;
 					this_error += bestError;
@@ -598,7 +686,7 @@ const fn = () => {
 			
 //			Draws 3 * NUM_OF_CIRCLES *instances*, each instance having 4 vertices (they're squares)
 			gl.drawArraysInstanced( gl.TRIANGLE_STRIP, 0, 4, 3 * NUM_OF_CIRCLES );
-			
+
 //			We set the framebuffer to null by default, which is the canvas.
 			gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 			
@@ -623,7 +711,8 @@ const fn = () => {
 
 //			Write the changes to the GL buffer
 			gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
-			gl.bufferSubData( gl.ARRAY_BUFFER, 0, new Float32Array( circleData ), 0, Math.round( NUM_OF_CIRCLES * 3 * CIRC_SIZE ) );
+			let eeee = new Float32Array( circleData );
+			gl.bufferSubData( gl.ARRAY_BUFFER, 0, eeee, 0, Math.round( NUM_OF_CIRCLES * 3 * CIRC_SIZE ) );
 
 //			Render the scene to the framebuffer.
 			render();
@@ -823,50 +912,96 @@ const fn = () => {
 		const Ubk = gl.getUniformLocation( program, "UtexBk" );
 		const Afg = gl.getAttribLocation( program, "AtexFg" );
 		const Ufg = gl.getUniformLocation( program, "UtexFg" );
-
-		gl.activeTexture( gl.TEXTURE1 );
-		const tex_bk = gl.createTexture();
-		
-		gl.bindTexture( gl.TEXTURE_2D, tex_bk );
-		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
 		
 		gl.uniform1i( Ubk, 1 );
 		
 		gl.activeTexture( gl.TEXTURE0 );
 		gl.bindTexture( gl.TEXTURE_2D, fbs.tx1 );
 		gl.uniform1i( Ufg, 0 );
-
-//		Resolution of the image
-		const res_x = 4684 * 0.5;
-		const res_y = 2387 * 0.5;
+		
+//				Resolution of the image
+		let res_x, res_y, scale_x, scale_y;
+			
 //		~~Not really the center, but a point we will center our calculations for the texture coords around.~~
-// 		Yes, the actual center, because contrast..
+//		Yes, the actual center, because contrast..
 		const center_x = .5;//1 - 1275 / 5160;
 		const center_y = .5;//1 - 1419 / 2871;
-		
-//		Scaling the image to the width of the screen.
-		let scale_x = Math.min( 1, 2 * canvas.width / res_x );
-		let scale_y = Math.min( 1, 2 * canvas.height / res_y );
-
 //		Percentage of the shown image to parallax scroll
 		const extra_scale = 0.1;
 
 		let bk_arr = [];
+		const bk_buf = gl.createBuffer();
 
-		{
-			const l_s = center_x * ( 1 - scale_x ) + extra_scale * scale_x;
-			const b_s = center_y * ( 1 - scale_y ) + extra_scale * scale_y;
-			const r_s = l_s + scale_x - 2 * extra_scale * scale_x;
-			const t_s = b_s + scale_y - 2 * extra_scale * scale_y;
+//		call w/ await
+		this.finishInitTexture = async function () {
+			gl.activeTexture( gl.TEXTURE1 );
+			const tex_bk = gl.createTexture();
+			
+			gl.bindTexture( gl.TEXTURE_2D, tex_bk );
+			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
+			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
+			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
+			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
+			gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
+			console.log( 'w: ' + image.width + ', h: ' + image.height );
 
-			bk_arr = new Float32Array( [
-				r_s, t_s,
-				r_s, b_s,
-				l_s, t_s,
-				l_s, b_s,
-			] );
+			let err = null;
+			let i = 0;
+			let factor = 1;
+			while ( ( err = gl.getError() ) !== gl.NO_ERROR ) {
+				console.warn( glErrStr( err ) );
+//				android was giving an error cause the texture was too big
+//				this reduces the size of the texture (hopefully)
+				const res_canv = document.createElement( "canvas" );
+				const res_ctx = res_canv.getContext( "2d" );
+
+				res_canv.width = image.width >> 1;
+				res_canv.height = image.height >> 1;
+				console.log( 'w: ' + image.width + ', rw: ' + res_canv.width + ', rh: ' + res_canv.height );
+				res_ctx.drawImage( image, 0, 0, res_canv.width, res_canv.height );
+
+				const dataURI = res_canv.toDataURL();
+				image.src = dataURI;
+				const promise = () => new Promise( res => { 
+					image.onload = () => {
+						gl.bindTexture( gl.TEXTURE_2D, tex_bk );
+						gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
+						console.log( 'w: ' + image.width + ', h: ' + image.height );
+						res();
+					}
+				} );
+				await promise();
+				factor *= 2;
+				if ( i++ > 256 ) {
+					break;
+				}
+			}
+
+//					Resolution of the image
+			res_x = image.width * 0.5 * factor;
+			res_y = image.height * 0.5 * factor;
+
+			scale_x = Math.min( 1, 2 * canvas.width / res_x );
+			scale_y = Math.min( 1, 2 * canvas.height / res_y );
+
+			console.log( 'scalex: ' + scale_x + ', scaley: ' + scale_y );
+
+			{
+				const l_s = center_x * ( 1 - scale_x ) + extra_scale * scale_x;
+				const b_s = center_y * ( 1 - scale_y ) + extra_scale * scale_y;
+				const r_s = l_s + scale_x - 2 * extra_scale * scale_x;
+				const t_s = b_s + scale_y - 2 * extra_scale * scale_y;
+
+				bk_arr = new Float32Array( [
+					r_s, t_s,
+					r_s, b_s,
+					l_s, t_s,
+					l_s, b_s,
+				] );
+			}
+
+			gl.bindBuffer( gl.ARRAY_BUFFER, bk_buf );
+			gl.bufferData( gl.ARRAY_BUFFER, bk_arr, gl.STATIC_DRAW );
 		}
 
 		const pos_buf = gl.createBuffer();
@@ -875,10 +1010,6 @@ const fn = () => {
 															-1,  1,
 															1, -1,
 															1,  1 ] ), gl.DYNAMIC_DRAW );
-
-		const bk_buf = gl.createBuffer();
-		gl.bindBuffer( gl.ARRAY_BUFFER, bk_buf );
-		gl.bufferData( gl.ARRAY_BUFFER, bk_arr, gl.STATIC_DRAW );
 		
 		const fg_buf = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, fg_buf );
@@ -920,7 +1051,7 @@ const fn = () => {
 			gl.bufferSubData( gl.ARRAY_BUFFER, 0, new_arr, 0, 8 );
 		};
 		
-		const v_mult = 0.00005;
+		const v_mult = 0.0008;
 		this.x = 0;
 		this.y = 0;
 		
@@ -954,6 +1085,9 @@ const fn = () => {
 					l_s, b_s,
 				] );
 			}
+
+			gl.bindBuffer( gl.ARRAY_BUFFER, bk_buf );
+			gl.bufferData( gl.ARRAY_BUFFER, bk_arr, gl.STATIC_DRAW );
 		};
 
 		this.reset = () => {
@@ -975,7 +1109,7 @@ const fn = () => {
 //		Arrow object (is constant for every document)
 		const arrow_obj = document.getElementById( "back-arrow" );
 
-		const hide_objs = document.getElementsByClassName( 'disappear-on-circle' );
+		const hide_objs = document.getElementsByClassName( 'disappear-on-focus' );
 
 //		Chosen document
 		let chosen_one = null;
@@ -992,8 +1126,8 @@ const fn = () => {
 //		This function turns off the display and resets the circles.
 		const mouseclick = () => {
 //			Fade out content and back arrow, then remove it from display
-			arrow_obj.onmouseover = undefined;
-			arrow_obj.onmouseout = undefined;
+			arrow_obj.onpointerover = undefined;
+			arrow_obj.onpointerout = undefined;
 			arrow_obj.onclick = undefined;
 			goal_opacity = 0;
 //			Note that we put all of the timeouts into a
@@ -1010,9 +1144,10 @@ const fn = () => {
 					e.classList.remove( 'fade-out' );
 					e.style.display = 'block';
 				}
+				setTimeout( () => circles.resize( canvas.width, canvas.height ), 2 );
 			}, 450 );
 
-// 			restore circles and click event
+//			restore circles and click event
 			circles.deselect( last_index );
 			canvas.onclick = click_select;
 		};
@@ -1033,17 +1168,17 @@ const fn = () => {
 
 //				Set up the back arrow
 				arrow_obj.style.display = 'block';
-				arrow_obj.onmouseover = mouseover;
-				arrow_obj.onmouseout = mouseout;
+				arrow_obj.onpointerover = mouseover;
+				arrow_obj.onpointerout = mouseout;
 				arrow_obj.onclick = mouseclick;
 				this.update = live_update;
 				goal_opacity = OPACITY_REST;
 
 //				Show the chosen document.
-				chosen_one = DOCUMENTS[ THE_CHOSEN_DOCUMENT ]; // That's a mouthful...
+				chosen_one = DOCUMENTS[ THE_CHOSEN_DOCUMENT ]; //That's a mouthful...
 				last_index = THE_CHOSEN_DOCUMENT;
 				chosen_timeout = null;
-//				Loop through each element and set it to fade in.
+//				fade it in
 				chosen_one.style.display = 'block';
 				chosen_one.classList.add( 'fade-in' );
 				chosen_one.classList.remove( 'fade-out' );
@@ -1051,8 +1186,8 @@ const fn = () => {
 		};
 
 		const live_update = () => {
-			const k = 0.000034;
-			const damp = 0.06;
+			const k = 0.024;
+			const damp = 0.08;
 			opacity_pp = k * ( goal_opacity - current_opacity );
 			opacity_p = opacity_p + opacity_pp * tDelta - opacity_p * damp;
 			current_opacity = current_opacity + opacity_p * tDelta;
@@ -1070,14 +1205,15 @@ const fn = () => {
 		}
 	} )();
 	
-// 	let ctr = 0;
+//	let ctr = 0;
 	const animate = ( tNow ) => {
 		tDelta = tNow - tPrev;
-// 		if ( ctr === 128 ) {
-// 			console.log( tDelta );
-// 			ctr = 0;
-// 		} else
-// 			ctr++;
+		tDelta /= 24;
+//		if ( ctr === 128 ) {
+//			console.log( tDelta );
+//			ctr = 0;
+//		} else
+//			ctr++;
 		
 		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
@@ -1090,7 +1226,8 @@ const fn = () => {
 		bkgd.update();
 		arrow.update();
 		
-		window.onmousemove = mousemove;	
+		window.ontouchmove = touchmove;
+		window.onmousemove = mousemove;
 		animFrame = requestAnimationFrame( animate );
 		tPrev = tNow;
 	};
@@ -1119,23 +1256,43 @@ const fn = () => {
 		bkgd.resize();
 	};
 	
+	const touchmove = ( e ) => {
+		console.log( 'touchmove: ' );
+		let elm;
+		if ( e.targetTouches && !( elm = _tfind( e.targetTouches, ( i ) => i.identifier === currentPointer ) ) ) {
+			return;
+		}
+		window.ontouchmove = null;
+		mousemove( elm );
+	}
+
 	const mousemove = ( e ) => {
+		window.onmousemove = null;
 		mx = e.clientX / cw - 1;
 		my = -e.clientY / ch + 1;
-		window.onmousemove = null;
 
 		circles.mousemove( e.clientX, canvas.height - e.clientY );
 	};
 	
-	const mouseout = () => {
+	const mouseout = ( e ) => {
+		e.preventDefault();
+		console.log( 'mouseout: ' );
+		let ind;
+		if ( e.targetTouches && !( ind = _tfind( e.targetTouches, ( i ) => i.identifier === currentPointer ) ) )
+			return;
+
 		mx = 0;
 		my = 0;
-		window.onmousemove = null;
+		window.onpointermove = null;
+		currentPointer = null;
 	};
 
 	const leavepage = ( e ) => {
 		cancelAnimationFrame( animFrame );
-		mouseout();
+		mouseout( e );
+		currentPointer = null;
+		mx = 0;
+		my = 0;
 		bkgd.reset();
 		arrow.reset();
 		circles.reset( true );
@@ -1151,30 +1308,48 @@ const fn = () => {
 		console.log( nav_to );
 		if ( nav_to !== -1 ) {
 //			Fade out site title.
-			const hide_objs = document.getElementsByClassName( 'disappear-on-circle' );
+			const hide_objs = document.getElementsByClassName( 'disappear-on-focus' );
 			for ( let i = 0; i < hide_objs.length; i++ ) {
 				let e = hide_objs[ i ];
 				e.classList.add( 'fade-out' );
 				e.classList.remove( 'fade-in' );
-				setTimeout( () => { console.log( 'EHELEHELRE' ); e.style.display = 'none'; }, 450 );
+				setTimeout( () => { e.style.display = 'none'; }, 450 );
 			}
 			canvas.onclick = undefined;
 		}
 	};
 
-// 	chrome warning
-// 	let chromeWarning = document.getElementById( 'chrome-notice' );
-// 	if ( ( window.chrome !== undefined && window.chrome !== null ) || window.navigator.userAgent.indexOf( 'Chrome' ) !== -1 ) chromeWarning.style.display = 'none';
+	/*
+	 * Main
+	 */
+
+//	assign bkgd texture
+	await bkgd.finishInitTexture();
 
 //	Do a resize to sync everything (technically undoes some init work but whatever)
 	resize();
+
+//	assign events
 	window.onresize = resize;
 	window.onbeforeunload = leavepage;
-	window.pagehide = leavepage;
+	window.onpagehide = leavepage;
 	window.addEventListener( 'visibilitychange', ( e ) => { if ( document.visibilityState === 'hidden' ) leavepage( e ); else animFrame = requestAnimationFrame( animate ); } );
 	canvas.onclick = click_select;
+	window.onmouseleave = mouseout;
+	window.onmouseout = mouseout;
+	window.ontouchstart = ( e ) => {
+		console.log( 'touchstart: ' ); 
+		if ( currentPointer === null && e.touches && e.touches.length > 0 ) 
+			currentPointer = e.touches[ 0 ].identifier; 
+	};
+	window.ontouchend = ( e ) => {
+		console.log( 'touchend: ' ); 
+		if ( !( e.targetTouches ) || _tany( e.targetTouches, ( i ) => i.identifier === currentPointer ) ) 
+			currentPointer = null; 
+	};
+	window.ontouchcancel = ( e ) => { canvas.ontouchend( e ); mouseout( e ); };
 
-//		Finally, when we're all done initializing the page, THEN we fade in so it doesn't look choppy.
+//	Finally, when we're all done initializing the page, THEN we fade in so it doesn't look choppy.
 	document.getElementsByClassName( "content" )[ 0 ].classList.add( "fade-in" );
 
 	tPrev = performance.now();
@@ -1182,4 +1357,3 @@ const fn = () => {
 };
 
 window.onload = fn;
-

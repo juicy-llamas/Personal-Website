@@ -44,6 +44,7 @@ body {
 	margin-top: calc( 3.6rem * var( --h-m-factor ) );
 	margin-bottom: calc( 2.4rem * var( --h-m-factor ) );
 	color: #013;
+	user-select: none;
 }
 
 #chrome-notice {
@@ -55,6 +56,7 @@ body {
 	font-size: 1.2em;
 	color: #555;
 	margin-bottom: 8px;
+	user-select: none;
 }
 
 @media screen and (max-width: 1024px) {
@@ -106,6 +108,7 @@ body {
 	font-size: calc( var( --crc-txt-sz ) / 8 );
 	font-family: 'Montserrat', sans-serif;
 	pointer-events: none;
+	user-select: none;
 }
 
 .over-canvas {
