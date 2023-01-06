@@ -117,6 +117,21 @@ div, a, p {
 	margin-bottom: calc( 1.6rem * var( --h-m-factor ) );
 }
 
+.page .float-thing {
+	width: calc( 200px + 10vw );
+	height: calc( var( --base-fsz )*0.6 + 2.4rem );
+	margin-top: calc( 2.4rem * var( --h-m-factor ) );
+	margin-bottom: calc( 2.4rem * var( --h-m-factor ) );
+}
+.page .float-thing .l {
+	float: left;
+	margin:0;
+}
+.page .float-thing .r {
+	float: right;
+	margin:0;
+}
+
 /* paragraphs */
 .page p {
 	font-weight: 300;
@@ -125,6 +140,9 @@ div, a, p {
 	line-height: 140%;
 	margin-top: var( --p-m-default );
 	margin-bottom: var( --p-m-default );
+}
+.page .no-indent {
+	text-indent: 0;
 }
 .page .p-big-c {
 	font-weight: 400;

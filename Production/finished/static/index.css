@@ -51,10 +51,10 @@ body {
 	position: absolute;
 	font-family: 'Montserrat', sans-serif;
 	left: calc( 50vw + 18rem );
-	top: calc( 3.6rem * var( --h-m-factor ) + 0.6rem );
+	top: calc( 3.6rem * var( --h-m-factor ) );
 	width: 14rem;
-	font-size: 1.2em;
-	color: #555;
+	font-size: calc( 1.2rem + 0.4vmin );
+	color: #337;
 	margin-bottom: 8px;
 	user-select: none;
 }
