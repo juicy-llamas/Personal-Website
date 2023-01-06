@@ -1132,7 +1132,7 @@ const fn = async function () {
 			goal_opacity = 0;
 //			Note that we put all of the timeouts into a
 //			1000 here is an arbitrary amount of time so I can tell how long the animation will take to complete.
-			arrow_timeout = setTimeout( () => { arrow_obj.style.display = 'none'; this.update = () => {}; }, 1100 );
+			arrow_timeout = setTimeout( () => { arrow_obj.style.display = 'none'; this.update = () => {}; }, 500 );
 
 			chosen_one.classList.add( 'fade-out' );
 			chosen_one.classList.remove( 'fade-in' );
