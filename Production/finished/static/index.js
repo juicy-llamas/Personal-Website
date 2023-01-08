@@ -816,7 +816,7 @@ const fn = async function () {
 			const h_ratio = canvas.height / oh;
 
 			clearTimeout( res_timeout );
-			res_timeout = setTimeout( () => fix_circles( precision, w_ratio, h_ratio ), 60 );
+			res_timeout = setTimeout( () => fix_circles( precision, w_ratio, h_ratio ), 40 );
 		};
 
 //		Sets the circles' r and spin to their original defaults.
@@ -1404,7 +1404,7 @@ const fn = async function () {
 	}
 
 //	Finally, when we're all done initializing the page, THEN we fade in so it doesn't look choppy.
-	setTimeout( () => document.getElementsByClassName( "content" )[ 0 ].classList.add( "fade-in" ), 120 );
+	setTimeout( () => document.getElementsByClassName( "content" )[ 0 ].classList.add( "fade-in" ), 80 );
 
 	tPrev = performance.now();
 	animFrame = requestAnimationFrame( animate );
