@@ -398,7 +398,7 @@ const fn = async function () {
 		};
 
 		let k = 0;
-		const updateCircle/*s?*/ = ( index ) => {
+		const updateCircle/*s?*/ = ( index, canvas_width_p_canvas_height ) => {
 //			Every element of the circle array listed out by name.
 			const cx = this.circles[ index * CIRCLES_SIZE + 0 ];
 			const cy = this.circles[ index * CIRCLES_SIZE + 1 ];
@@ -410,11 +410,12 @@ const fn = async function () {
 			const zeroed = this.circles[ index * CIRCLES_SIZE + 7 ];
 
 //			This is to hopefully prevent gridlocked cases (sometimes the outer rings are solid or the circles are blown up).
-			r_goal = r_goal == Infinity || r_goal == NaN ? REST_R : r_goal;
-			spin_goal = spin_goal == Infinity || spin_goal == NaN ? RESTING_SPIN_RATE : spin_goal;
-			spin = spin == Infinity || spin == NaN ? RESTING_SPIN_RATE : spin;
-			r_p = r_p == Infinity || r_p == NaN ? 0 : r_p;
-			r = r == Infinity || r == NaN ? REST_R : r;
+			r_goal = r_goal === Infinity || r_goal === NaN ? REST_R : r_goal;
+			spin_goal = spin_goal === Infinity || spin_goal === NaN ? RESTING_SPIN_RATE : spin_goal;
+			spin = spin === Infinity || spin === NaN ? RESTING_SPIN_RATE : spin;
+			r_p = r_p === Infinity || r_p === NaN ? 0 : r_p;
+			r = r === Infinity || r === NaN ? REST_R : r;
+			r = r > canvas_width_p_canvas_height ? canvas_width_p_canvas_height : r;
 
 //			Spring equation for radius.
 			const k_r = 0.022;
@@ -426,11 +427,11 @@ const fn = async function () {
 			r_p = r_p * damp + r_pp * tDelta;//Math.clamp( r_p * damp + r_pp * tDelta, 2.4, -2.4 );
 			r = r + r_p * tDelta;
 
-			if ( index === 2 && k >= 128 ) {
-				console.log( `td = ${tDelta}` );
-				k = 0;
-			}
-			k += 1;
+// 			if ( index === 2 && k >= 128 ) {
+// 				console.log( `td = ${tDelta}` );
+// 				k = 0;
+// 			}
+// 			k += 1;
 
 //			If the radius is set to zero, it will go to zero and then come back and oscillate for a while due to the spring equation.
 //			The 'zeroed' variable makes sure that if the radius is set to zero when naving, it does not bounce up (I just thought that looked really weird and didn't much care for it).
@@ -507,9 +508,16 @@ const fn = async function () {
 		let PADW = 0;
 		let DIST = 0;
 
+		const get_head = () => {
+			const note = document.getElementById( 'chrome-notice' );
+			const head = document.getElementsByClassName( 'site-header' )[ 0 ];
+			const note_head = note.style.display == 'none' ? 0 : note.clientHeight + 64;
+			const site_head = head.clientHeight;
+			return canvas.width > 1024 ? Math.max( note_head, site_head ) : ( note_head + site_head );
+		};
+
 		const set_r_consts = () => {
-			const k = document.getElementsByClassName( 'site-header' )[ 0 ].clientHeight;
-			const canvas_height = canvas.height - k;
+			const canvas_height = canvas.height - get_head();
 			const mx = Math.max( canvas.width, canvas_height );
 			const mn = Math.min( canvas.width, canvas_height );
 			REST_R = Math.sqrt( mx * mn / ( NUM_OF_CIRCLES * NUM_OF_CIRCLES ) / 2 );
@@ -536,13 +544,7 @@ const fn = async function () {
 			let best_error = 50000001;
 			this.circles = [];
 
-			const header = ( ( head, note )  => {
-				const note_head = note.style.display == 'none' ? 0 : note.clientHeight + 64;
-				const site_head = head.clientHeight;
-				return canvas.width > 1024 ? Math.max( note_head, site_head ) : note_head + site_head;
-			} )( document.getElementById( 'chrome-notice' ), document.getElementsByClassName( 'site-header' )[ 0 ] );
-
-			const canvas_height = canvas.height - header;
+			const canvas_height = canvas.height - get_head();
 //			center of screen
 			const cenx = cw;
 			const cenh = canvas_height / 2;
@@ -610,7 +612,7 @@ const fn = async function () {
 							return false;
 					};
 
-					const max_atts = 32;
+					const max_atts = 36;
 					let limit = max_atts;
 					while ( check() && limit > 0 ) {
 						theta = Math.random() * 2 * Math.PI;
@@ -640,13 +642,62 @@ const fn = async function () {
 
 			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
 				let angle_offset = Math.random() * Math.PI * 2;
-				console.log( i );
-				console.log( best_config[ i*2 ] );
-				console.log( best_config[ i*2 + 1 ] );
+// 				console.log( i );
+// 				console.log( best_config[ i*2 ] );
+// 				console.log( best_config[ i*2 + 1 ] );
 				createCircle( best_config[ i*2 ], best_config[ i*2 + 1 ], REST_R, RESTING_SPIN_RATE, angle_offset, i + 1 );
 			}
 		};
-		gen_circles( 128 );
+		gen_circles( 32 );
+
+		const fix_circles = ( step_amt, w_ratio, h_ratio ) => {;
+			const canvas_height = canvas.height - get_head();
+			const plusx = ( x ) => ( x > 0 ) * x;
+			const products = [];
+			let step_size = 1 / 4;
+
+			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
+				this.circles[ i * CIRCLES_SIZE + 0 ] *= w_ratio;
+				this.circles[ i * CIRCLES_SIZE + 1 ] *= h_ratio;
+			}
+
+			for ( let iter = 0; iter < step_amt; iter++ ) {
+				for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
+					products[ i * 2 + 0 ] = 0;
+					products[ i * 2 + 1 ] = 0;
+
+					const cx = this.circles[ i * CIRCLES_SIZE + 0 ];
+					const cy = this.circles[ i * CIRCLES_SIZE + 1 ];
+
+					const lp = ( j ) => {
+						const x = cx - this.circles[ j * CIRCLES_SIZE + 0 ];
+						const y = cy - this.circles[ j * CIRCLES_SIZE + 1 ];
+						const squ = x * x + y * y;
+
+						if ( squ < DIST * PAD ) {
+							products[ i * 2 + 0 ] += x;
+							products[ i * 2 + 1 ] += y;
+						}
+					};
+					for ( let j = 0; j < i; j++ ) lp( j );
+					for ( let j = i + 1; j < NUM_OF_CIRCLES; j++ ) lp( j );
+
+					products[ i * 2 + 0 ] += 2 * ( plusx( PADW - cx ) - plusx( cx - ( canvas.width - PADW ) ) );
+					products[ i * 2 + 1 ] += 2 * ( plusx( PADW - cy ) - plusx( cy - ( canvas_height - PADW ) ) );
+
+					this.circles[ i * CIRCLES_SIZE + 0 ] += products[ i * 2 + 0 ] * step_size;
+					this.circles[ i * CIRCLES_SIZE + 1 ] += products[ i * 2 + 1 ] * step_size;
+				}
+				step_size /= 1.02;
+			}
+
+			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
+//				Also change the text position
+				const text = this.circles[ i * CIRCLES_SIZE + 8 ];
+				text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - text.clientWidth / 2) + 'px';
+				text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - text.clientHeight / 2) + 'px';
+			}
+		};
 		
 		const arcBuffer = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, arcBuffer );
@@ -705,8 +756,9 @@ const fn = async function () {
 			gl.useProgram( program );
 			
 //			Update circle array (do math calculations) for each circle.
+			const k = ( canvas.width + canvas.height );
 			for ( var i = 0; i < NUM_OF_CIRCLES; i++ ) {
-				updateCircle( i );
+				updateCircle( i, k );
 			}
 
 //			Write the changes to the GL buffer
@@ -746,8 +798,9 @@ const fn = async function () {
 			}
 		};
 
+		let res_timeout = false;
 //		Updates the circles when the screen resizes.
-		this.resize = ( ow, oh ) => {
+		this.resize = ( ow, oh, precision = 10 ) => {
 //			First set the program and change our uniform for resolution.
 			gl.useProgram( program );
 			gl.uniform2f( Uresolution, canvas.width, canvas.height );
@@ -762,15 +815,8 @@ const fn = async function () {
 			const w_ratio = canvas.width / ow;
 			const h_ratio = canvas.height / oh;
 
-			for ( let i = 0; i < NUM_OF_CIRCLES; i++ ) {
-				this.circles[ i * CIRCLES_SIZE + 0 ] *= w_ratio;
-				this.circles[ i * CIRCLES_SIZE + 1 ] *= h_ratio;
-				const text = this.circles[ i * CIRCLES_SIZE + 8 ];
-
-//				Also change the text position
-				text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - text.clientWidth / 2) + 'px';
-				text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - text.clientHeight / 2) + 'px';
-			}
+			clearTimeout( res_timeout );
+			res_timeout = setTimeout( () => fix_circles( precision, w_ratio, h_ratio ), 60 );
 		};
 
 //		Sets the circles' r and spin to their original defaults.
@@ -943,7 +989,6 @@ const fn = async function () {
 			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
 			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
 			gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
-			console.log( 'w: ' + image.width + ', h: ' + image.height );
 
 			let err = null;
 			let i = 0;
@@ -984,7 +1029,7 @@ const fn = async function () {
 			scale_x = Math.min( 1, 2 * canvas.width / res_x );
 			scale_y = Math.min( 1, 2 * canvas.height / res_y );
 
-			console.log( 'scalex: ' + scale_x + ', scaley: ' + scale_y );
+// 			console.log( 'scalex: ' + scale_x + ', scaley: ' + scale_y );
 
 			{
 				const l_s = center_x * ( 1 - scale_x ) + extra_scale * scale_x;
@@ -1328,6 +1373,7 @@ const fn = async function () {
 
 //	Do a resize to sync everything (technically undoes some init work but whatever)
 	resize();
+// 	circles.resize( canvas.width, canvas.height, 38 );
 
 //	assign events
 	window.onresize = resize;
@@ -1349,8 +1395,16 @@ const fn = async function () {
 	};
 	window.ontouchcancel = ( e ) => { canvas.ontouchend( e ); mouseout( e ); };
 
+// 	specific bug w firefox
+	{
+		const gl_restart = gl.getExtension( "WEBGL_lose_context" );
+		canvas.addEventListener( 'webglcontextlost', () => {
+			gl_restart.restoreContext();
+		} );
+	}
+
 //	Finally, when we're all done initializing the page, THEN we fade in so it doesn't look choppy.
-	document.getElementsByClassName( "content" )[ 0 ].classList.add( "fade-in" );
+	setTimeout( () => document.getElementsByClassName( "content" )[ 0 ].classList.add( "fade-in" ), 120 );
 
 	tPrev = performance.now();
 	animFrame = requestAnimationFrame( animate );
