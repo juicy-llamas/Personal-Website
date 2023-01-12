@@ -17,8 +17,8 @@ const do_https_action = ( f ) => {
 	}
 }
 
-const pkey = do_https_action( () => fs.readFileSync( 'cert/server.key', 'utf8' ) );
-const cert = do_https_action( () => fs.readFileSync( 'cert/server.crt', 'utf8' ) );
+const pkey = do_https_action( () => fs.readFileSync( 'cert/private.key', 'utf8' ) );
+const cert = do_https_action( () => fs.readFileSync( 'cert/certificate.crt', 'utf8' ) );
 
 const express = require( 'express' );
 const app = express();
