@@ -416,6 +416,8 @@ const fn = async function () {
 			r_p = r_p === Infinity || r_p === NaN ? 0 : r_p;
 			r = r === Infinity || r === NaN ? REST_R : r;
 			r = r > canvas_width_p_canvas_height ? canvas_width_p_canvas_height : r;
+			spin = spin > SPINNY_SPIN_RATE * 2 ? SPINNY_SPIN_RATE : spin;
+			spin_goal = spin_goal > SPINNY_SPIN_RATE * 2 ? SPINNY_SPIN_RATE : spin_goal;
 
 //			Spring equation for radius.
 			const k_r = 0.022;
@@ -482,10 +484,15 @@ const fn = async function () {
 			this.circles[ index * CIRCLES_SIZE + 6 ] = spin_goal;
 
 //			These are the individual angles for the spinny arcs.
-			const one = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 4 ];
-			const two = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 5 ];
-			const thr = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 4 ];
-			const fou = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 5 ];
+			let one = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 4 ];
+			let two = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE + 5 ];
+			let thr = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 4 ];
+			let fou = circleData[ CIRC_SIZE * 3 * index + CIRC_SIZE * 2 + 5 ];
+// 			Same deal...
+			one = one === Infinity || one === NaN ? 0 : one;
+			two = two === Infinity || two === NaN ? Math.PI * 0.7 : two;
+			thr = thr === Infinity || thr === NaN ? Math.PI : thr;
+			fou = fou === Infinity || fou === NaN ? Math.PI * 1.7 : fou;
 //			Spin rate is in radians per sec, and we approximate that by accounting for passed time and converting to ms.
 			const rate = spin * tDelta / (125 / 3);
 
@@ -1195,6 +1202,8 @@ const fn = async function () {
 //			restore circles and click event
 			circles.deselect( last_index );
 			canvas.onclick = click_select;
+
+			window.onhashchange = undefined;
 		};
 
 //		When the user hovers over the arrow, it should increase in opacity.
@@ -1227,6 +1236,9 @@ const fn = async function () {
 				chosen_one.style.display = 'block';
 				chosen_one.classList.add( 'fade-in' );
 				chosen_one.classList.remove( 'fade-out' );
+
+				window.location.href = '#pg';
+				window.onhashchange = mouseclick;
 			}
 		};
 
@@ -1377,7 +1389,7 @@ const fn = async function () {
 
 //	assign events
 	window.onresize = resize;
-	window.onbeforeunload = leavepage;
+// 	window.onbeforeunload = leavepage;
 	window.onpagehide = leavepage;
 	window.addEventListener( 'visibilitychange', ( e ) => { if ( document.visibilityState === 'hidden' ) leavepage( e ); else animFrame = requestAnimationFrame( animate ); } );
 	canvas.onclick = click_select;

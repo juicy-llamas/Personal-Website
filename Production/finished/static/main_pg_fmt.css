@@ -206,13 +206,16 @@ div, a, p {
 
 .page .git-icon {
 	margin-left: calc( 0.4rem + 0.1vw );
+	margin-right: calc( 0.4rem + 0.1vw );
 	position: relative;
 }
 .page h1 .git-icon {
 	margin-left: calc( 1.2rem + 0.3vw );
+	margin-right: calc( 1.2rem + 0.3vw );
 }
 .page .git-icon.v-m {
 	margin-left: 0;
+	margin-right: 0;
 	margin-top: calc( 0.4rem + 0.1vw );
 	margin-bottom: calc( 0.4rem + 0.1vw );
 }
