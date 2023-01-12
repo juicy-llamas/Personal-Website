@@ -517,10 +517,12 @@ const fn = async function () {
 
 		const get_head = () => {
 			const note = document.getElementById( 'chrome-notice' );
+			const wgl = document.getElementById( 'webgl-lost-notice' );
 			const head = document.getElementsByClassName( 'site-header' )[ 0 ];
-			const note_head = note.style.display == 'none' ? 0 : note.clientHeight + 64;
+			const note_head = note.style.display === 'none' ? 0 : note.clientHeight + 64;
+			const wgl_head = wgl.style.display !== 'block' ? 0 : wgl.clientHeight;
 			const site_head = head.clientHeight;
-			return canvas.width > 1024 ? Math.max( note_head, site_head ) : ( note_head + site_head );
+			return ( canvas.width > 1024 ? Math.max( note_head, site_head ) : ( note_head + site_head ) ) + wgl_head;
 		};
 
 		const set_r_consts = () => {
@@ -918,7 +920,7 @@ const fn = async function () {
 			}, 600 );
 		};
 	} )();
-	
+
 	const bkgd = new ( function () {
 		const vs = `
 			attribute vec2 Apos;
@@ -926,7 +928,7 @@ const fn = async function () {
 			varying vec2 VtexBk;
 			attribute vec2 AtexFg;
 			varying vec2 VtexFg;
-			
+
 			void main() {
 				gl_Position = vec4( Apos, 0., 1. );
 				VtexBk = AtexBk;
@@ -937,26 +939,26 @@ const fn = async function () {
 		const fs = `
 			precision mediump float;
 			uniform sampler2D UtexBk;
-			varying vec2 VtexBk;	
+			varying vec2 VtexBk;
 			uniform sampler2D UtexFg;
 			varying vec2 VtexFg;
-			
+
 			vec4 accurate_mix ( vec4 bk, vec4 fg ) {
 				float alpha = 1.0 - fg.a;
-				
+
 //				Gamma correction of 2, close enough to 2.2 or whatever the ideal ratio is.
 				vec3 color = sqrt( fg.rgb * fg.rgb + bk.rgb * bk.rgb * alpha );
-				
+
 				float out_alpha = fg.a + bk.a * alpha;
 				return vec4( color, out_alpha );
 			}
-			
+
 			void main() {
 				vec4 final_color = accurate_mix( texture2D( UtexBk, VtexBk ), texture2D( UtexFg, VtexFg ) );
 				gl_FragColor = vec4( final_color.rgb, 1.0 );
 			}
 		`;
-		
+
 		const program = create_program( vs, fs );
 		gl.useProgram( program );
 
@@ -965,16 +967,16 @@ const fn = async function () {
 		const Ubk = gl.getUniformLocation( program, "UtexBk" );
 		const Afg = gl.getAttribLocation( program, "AtexFg" );
 		const Ufg = gl.getUniformLocation( program, "UtexFg" );
-		
+
 		gl.uniform1i( Ubk, 1 );
-		
+
 		gl.activeTexture( gl.TEXTURE0 );
 		gl.bindTexture( gl.TEXTURE_2D, fbs.tx1 );
 		gl.uniform1i( Ufg, 0 );
-		
+
 //				Resolution of the image
 		let res_x, res_y, scale_x, scale_y;
-			
+
 //		~~Not really the center, but a point we will center our calculations for the texture coords around.~~
 //		Yes, the actual center, because contrast..
 		const center_x = .5;//1 - 1275 / 5160;
@@ -989,7 +991,7 @@ const fn = async function () {
 		this.finishInitTexture = async function () {
 			gl.activeTexture( gl.TEXTURE1 );
 			const tex_bk = gl.createTexture();
-			
+
 			gl.bindTexture( gl.TEXTURE_2D, tex_bk );
 			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 			gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
@@ -1014,7 +1016,7 @@ const fn = async function () {
 
 				const dataURI = res_canv.toDataURL();
 				image.src = dataURI;
-				const promise = () => new Promise( res => { 
+				const promise = () => new Promise( res => {
 					image.onload = () => {
 						gl.bindTexture( gl.TEXTURE_2D, tex_bk );
 						gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
@@ -1062,64 +1064,64 @@ const fn = async function () {
 															-1,  1,
 															1, -1,
 															1,  1 ] ), gl.DYNAMIC_DRAW );
-		
+
 		const fg_buf = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, fg_buf );
 		gl.bufferData( gl.ARRAY_BUFFER, new Float32Array( [ 0, 0,
 															0, 1,
 															1, 0,
 															1, 1 ] ), gl.STATIC_DRAW );
-		
+
 		const render = () => {
 			gl.enableVertexAttribArray( Apos );
 			gl.enableVertexAttribArray( Abk );
 			gl.enableVertexAttribArray( Afg );
-			
+
 			gl.bindBuffer( gl.ARRAY_BUFFER, pos_buf );
 			gl.vertexAttribPointer( Apos, 2, gl.FLOAT, false, 0, 0 );
-			
+
 			gl.bindBuffer( gl.ARRAY_BUFFER, bk_buf );
 			gl.vertexAttribPointer( Abk, 2, gl.FLOAT, false, 0, 0 );
-			
+
 			gl.bindBuffer( gl.ARRAY_BUFFER, fg_buf );
 			gl.vertexAttribPointer( Afg, 2, gl.FLOAT, false, 0, 0 );
-			
+
 			gl.vertexAttribDivisor( Apos, 0 );
 			gl.vertexAttribDivisor( Abk, 0 );
 			gl.vertexAttribDivisor( Afg, 0 );
-			
+
 			gl.bindFramebuffer( gl.FRAMEBUFFER, null );
-			
+
 			gl.drawArrays( gl.TRIANGLE_STRIP, 0, 4 );
-			
+
 			gl.disableVertexAttribArray( Apos );
 			gl.disableVertexAttribArray( Abk );
 			gl.disableVertexAttribArray( Afg );
 		};
-		
+
 		const addToBkBuff = () => {
 			const new_arr = bk_arr.map( ( elm, ind ) => { return elm + ( ind % 2 === 0 ? this.x : this.y ) } );
 			gl.bindBuffer( gl.ARRAY_BUFFER, bk_buf );
 			gl.bufferSubData( gl.ARRAY_BUFFER, 0, new_arr, 0, 8 );
 		};
-		
+
 		const v_mult = 0.0008;
 		this.x = 0;
 		this.y = 0;
-		
+
 		this.update = () => {
 			gl.useProgram( program );
-				
+
 			let velx = v_mult * ( mx - this.x / extra_scale / scale_x );
 			let vely = v_mult * ( my - this.y / extra_scale / scale_y );
-			
+
 			this.x += velx * tDelta;
 			this.y += vely * tDelta;
 
 			addToBkBuff();
 			render();
 		};
-		
+
 		this.resize = () => {
 			scale_x = Math.min( 1, 2 * canvas.width / res_x );
 			scale_y = Math.min( 1, 2 * canvas.height / res_y );
@@ -1146,7 +1148,7 @@ const fn = async function () {
 			this.x = 0;
 			this.y = 0;
 		};
-		
+
 	} )();
 
 //	Control logic for the back arrow and it's animations.
@@ -1238,7 +1240,7 @@ const fn = async function () {
 				chosen_one.classList.remove( 'fade-out' );
 
 				window.location.href = '#pg';
-				window.onhashchange = mouseclick;
+				setTimeout( () => { window.onhashchange = mouseclick; }, 200 );
 			}
 		};
 
@@ -1261,7 +1263,7 @@ const fn = async function () {
 			opacity_pp = 0;
 		}
 	} )();
-	
+
 //	let ctr = 0;
 	const animate = ( tNow ) => {
 		tDelta = tNow - tPrev;
@@ -1271,18 +1273,18 @@ const fn = async function () {
 //			ctr = 0;
 //		} else
 //			ctr++;
-		
+
 		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 		gl.bindFramebuffer( gl.FRAMEBUFFER, fbs.fb1 );
 		gl.clear( gl.COLOR_BUFFER_BIT );
 		gl.bindFramebuffer( gl.FRAMEBUFFER, fbs.fb2 );
 		gl.clear( gl.COLOR_BUFFER_BIT );
-		
+
 		circles.update();
 		bkgd.update();
 		arrow.update();
-		
+
 		window.ontouchmove = touchmove;
 		window.onmousemove = mousemove;
 		animFrame = requestAnimationFrame( animate );
@@ -1312,7 +1314,7 @@ const fn = async function () {
 		circles.resize( canvw, canvh );
 		bkgd.resize();
 	};
-	
+
 	const touchmove = ( e ) => {
 		console.log( 'touchmove: ' );
 		let elm;
@@ -1330,7 +1332,7 @@ const fn = async function () {
 
 		circles.mousemove( e.clientX, canvas.height - e.clientY );
 	};
-	
+
 	const mouseout = ( e ) => {
 		e.preventDefault();
 		console.log( 'mouseout: ' );
@@ -1391,32 +1393,67 @@ const fn = async function () {
 	window.onresize = resize;
 // 	window.onbeforeunload = leavepage;
 	window.onpagehide = leavepage;
-	window.addEventListener( 'visibilitychange', ( e ) => { if ( document.visibilityState === 'hidden' ) leavepage( e ); else animFrame = requestAnimationFrame( animate ); } );
+	const vs_ch = ( e ) => { if ( document.visibilityState === 'hidden' ) leavepage( e ); else animFrame = requestAnimationFrame( animate ); };
+	window.addEventListener( 'visibilitychange', vs_ch );
 	canvas.onclick = click_select;
 	window.onmouseleave = mouseout;
 	window.onmouseout = mouseout;
 	window.ontouchstart = ( e ) => {
-		console.log( 'touchstart: ' ); 
-		if ( currentPointer === null && e.touches && e.touches.length > 0 ) 
-			currentPointer = e.touches[ 0 ].identifier; 
+		console.log( 'touchstart: ' );
+		if ( currentPointer === null && e.touches && e.touches.length > 0 )
+			currentPointer = e.touches[ 0 ].identifier;
 	};
 	window.ontouchend = ( e ) => {
-		console.log( 'touchend: ' ); 
-		if ( !( e.targetTouches ) || _tany( e.targetTouches, ( i ) => i.identifier === currentPointer ) ) 
-			currentPointer = null; 
+		console.log( 'touchend: ' );
+		if ( !( e.targetTouches ) || _tany( e.targetTouches, ( i ) => i.identifier === currentPointer ) )
+			currentPointer = null;
 	};
 	window.ontouchcancel = ( e ) => { canvas.ontouchend( e ); mouseout( e ); };
 
 // 	specific bug w firefox
-	{
-		const gl_restart = gl.getExtension( "WEBGL_lose_context" );
-		canvas.addEventListener( 'webglcontextlost', () => {
-			gl_restart.restoreContext();
-		} );
-	}
+	canvas.addEventListener( 'webglcontextlost', () => {
+		console.warn( 'deleting WEBGL context...' );
+		cancelAnimationFrame( animFrame );
+
+		// 		reset events
+		window.onpagehide = undefined;
+		window.removeEventListener( 'visibilitychange', vs_ch );
+		canvas.onclick = undefined;
+		window.onmousemove = undefined;
+		window.ontouchmove = undefined;
+		window.onmouseleave = undefined;
+		window.onmouseout = undefined;
+		window.ontouchstart = undefined;
+		window.ontouchend = undefined;
+		window.ontouchcancel = undefined;
+
+// 		fade out everything
+		const content = document.getElementsByClassName( 'content' ).item( 0 );
+		content.classList.remove( 'fade-in' );
+		content.classList.add( 'fade-out' );
+
+// 		add a new canvas
+		setTimeout( () => {
+			let clone = document.createElement( 'canvas' );
+			canvas.remove();
+			clone.id = 'screen';
+			let bcanv = document.getElementsByClassName( 'before-canvas' ).item( 0 );
+			content.insertBefore( clone, bcanv );
+
+			document.getElementById( 'webgl-lost-notice' ).style.display = 'block';
+
+//	 		reset everything after fade out
+			console.warn( 'restarting WEBGL context...' );
+			setTimeout( fn, 40 );
+		}, 310 );
+	} );
 
 //	Finally, when we're all done initializing the page, THEN we fade in so it doesn't look choppy.
-	setTimeout( () => document.getElementsByClassName( "content" )[ 0 ].classList.add( "fade-in" ), 80 );
+	setTimeout( () => {
+		const content = document.getElementsByClassName( "content" )[ 0 ]
+		content.classList.remove( "fade-out" );
+		content.classList.add( "fade-in" );
+	}, 80 );
 
 	tPrev = performance.now();
 	animFrame = requestAnimationFrame( animate );

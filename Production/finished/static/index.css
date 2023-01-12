@@ -59,12 +59,28 @@ body {
 	user-select: none;
 }
 
+#webgl-lost-notice {
+	position: absolute;
+	font-family: 'Montserrat', sans-serif;
+	left: 10vw;
+	top: calc( 3.6rem * var( --h-m-factor ) * 2 + 4.4rem );
+	text-align: center;
+	width: 80vw;
+	font-size: calc( 1.2rem + 0.4vmin );
+	color: #F63;
+	user-select: none;
+	display: none;
+}
+
 @media screen and (max-width: 1024px) {
 	#chrome-notice {
 		left: calc( 50vw - 12rem );
 		top: calc( 3.6rem * var( --h-m-factor ) * 2 + 4.4rem );
 		width: 24rem;
 		text-align: center;
+	}
+	#webgl-lost-notice {
+		top: calc( 3.6rem * var( --h-m-factor ) * 2 + 4.4rem + ( 1.2rem + 0.4vmin ) * 2 + 12px );
 	}
 }
 
