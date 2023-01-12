@@ -182,27 +182,25 @@ div, a, p {
 	background: var( --link-idle );
 	display: inline-block;
 	position: absolute;
-	width: 50%;
+	width: 100%;
 	top: 103%;
 	left: 0%;
     content: '';
 	transition: all 0.6s;
 	transform-origin: 0 50%;
-	transform: scale( 0.2, 1 );
+	transform: scale( 0.1, 1 );
 }
 .page h3 a::before, .page h3 a::after {
 	height: 3px;
 }
 .page a::after {
-	left: 90%;
-	width: 50%;
+	transform-origin: 100% 50%;
 }
 .page a:hover::before, .page a:hover::after {
 	background: var( --link-hover );
-	transform: scale( 1, 1 );
+	transform: scale( .5, 1 );
 }
 .page a:hover::after {
-	left: 50%;
 }
 
 .page .a-icont * {
