@@ -167,6 +167,7 @@ div, a, p {
 	margin-bottom: calc( var( --p-m-default ) * 3 );
 }
 .page a {
+	white-space: nowrap;
 	position: relative;
 	text-indent: 0;
 	margin: 0;
@@ -183,24 +184,24 @@ div, a, p {
 	display: inline-block;
 	position: absolute;
 	width: 100%;
-	top: 103%;
+	top: 102%;
 	left: 0%;
     content: '';
 	transition: all 0.6s;
-	transform-origin: 0 50%;
-	transform: scale( 0.1, 1 );
-}
-.page h3 a::before, .page h3 a::after {
-	height: 3px;
 }
 .page a::after {
-	transform-origin: 100% 50%;
+	height: 2px;
+	top: calc( 102% + 1px );
+	transform-origin: 50% 50%;
+	transform: scale( 0, 1 );
 }
+.page h3 a::after {	height: 3px; }
+.page h3 a::before { display: none; }
 .page a:hover::before, .page a:hover::after {
 	background: var( --link-hover );
-	transform: scale( .5, 1 );
 }
 .page a:hover::after {
+	transform: scale( 1, 1 );
 }
 
 .page .a-icont * {
@@ -260,20 +261,25 @@ div, a, p {
 	width: 32px;
 	height: 32px;
 	fill: var( --link-idle );
-	transition: fill 0.6s;
+	transition: fill 0.6s, border-color 0.6s;
+	border-radius: 20px;
+	border: solid;
+	border-width: 2px;
+	border-color: var( --link-idle );
 }
 .page h1 .git-icon svg {
 	top: calc( 60% - 16px );
 }
 .page .git-icon:hover svg {
 	fill: var( --link-hover );
+	border-color: var( --link-hover );
 }
 .page .git-icon path {
-	transform: scale( 0.75, 0.75 ) translate( 4px, 4px );
+	transform: scale( 0.75, 0.75 ) translate( 5.2px, 5px );
 	transition: transform 0.6s;
 }
 .page .git-icon:hover path {
-	transform: scale( 1, 1 ) translate( 0, 0 );
+	transform: scale( 1.1, 1.1 ) translate( -2px, -2px );
 }
 
 
