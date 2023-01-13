@@ -262,17 +262,17 @@ div, a, p {
 	height: 32px;
 	fill: var( --link-idle );
 	transition: fill 0.6s, border-color 0.6s;
-	border-radius: 20px;
-	border: solid;
-	border-width: 2px;
-	border-color: var( --link-idle );
+/* 	border-radius: 20px; */
+/* 	border: solid; */
+/* 	border-width: 2px; */
+/* 	border-color: var( --link-idle ); */
 }
 .page h1 .git-icon svg {
 	top: calc( 60% - 16px );
 }
 .page .git-icon:hover svg {
 	fill: var( --link-hover );
-	border-color: var( --link-hover );
+/* 	border-color: var( --link-hover ); */
 }
 .page .git-icon path {
 	transform: scale( 0.75, 0.75 ) translate( 5.2px, 5px );
