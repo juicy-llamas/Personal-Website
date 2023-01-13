@@ -1,5 +1,5 @@
 #!/bin/bash
 git add .
 git commit -m "minor change on site"
-git push
-ssh ec2-user@llamas.us.to -i ~/.ssh/danny.pem 'cd Personal-Site; git pull'
+git push origin master
+ssh ec2-user@llamas.us.to -i ~/.ssh/danny.pem 'ls; cd Personal-Website; git pull'
