@@ -62,7 +62,7 @@ body {
 	font-family: 'Montserrat', sans-serif;
 	left: calc( 50vw + 18rem );
 	top: calc( var( --head-tmgn ) - calc( 0.8rem + 0.7vmin ) * 1.35 + var( --head-ftsz ) / 2 );
-	width: calc( ( 0.8rem + 0.7vmin ) * 24 );
+	width: calc( ( 0.8rem + 0.7vmin ) * 10 );
 	font-size: calc( 0.8rem + 0.7vmin );
 	color: #337;
 	margin-bottom: 8px;
