@@ -296,7 +296,7 @@ const fn = async function () {
 					*/
 					float theta = atan( -diff.y, -diff.x ) + PI;
 
-					float deltaT = 0.015;
+					float deltaT = 0.010;
 					alpha = 1.0 - smoothstep( R2.x - delta, R2.x + delta, dist.x )
 								- smoothstep( R2.y + delta, R2.y - delta, dist.y );
 
