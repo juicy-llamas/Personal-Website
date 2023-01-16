@@ -79,7 +79,7 @@ body {
 @media screen and (max-width: 1024px) {
 	#chrome-notice {
 		left: calc( 50vw - 12rem );
-		top: calc( var( --head-tmgn ) + var( --head-bmgn ) + var( --head-ftsz ) );
+		top: calc( var( --head-tmgn ) + var( --head-bmgn ) + 1rem + 0.6vmin + var( --head-ftsz ) );
 		width: 24rem;
 		text-align: center;
 	}
