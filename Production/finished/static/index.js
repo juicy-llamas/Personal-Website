@@ -220,6 +220,7 @@ const fn = async function () {
 			varying float Vang1;
 			varying float Vang2;
 			varying vec4 Vcolor;
+			varying float delta;
 			
 			uniform vec2 Uresolution;
 			
@@ -275,7 +276,7 @@ const fn = async function () {
 				
 				#ifdef GL_OES_standard_derivatives
 				float delta = fwidth( dist );
-				delta = delta < 1. ? 1. : delta;
+// 				delta = delta < 1. ? 1. : delta;
 				#else
 				float delta = 2. * VR.x;
 				#endif
