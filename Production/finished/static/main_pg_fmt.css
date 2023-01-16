@@ -40,7 +40,6 @@
 	--arr-hm: calc( 1vmin + 12px );
 	--tit-vm: calc( ( var( --arr-sz ) + 2 * var( --arr-vm ) - 1.34 * var( --tit-fsz ) ) / 2 );
 	--tit-lm: calc( var( --arr-hm ) * 2 + var( --arr-sz ) - var( --pg-hm ) + 1.6rem );
-	--h-m-factor: .7;
 	--p-m-default: .7rem;
 	--link-hover: #0A6;
 	--link-idle: #466;
