@@ -350,6 +350,7 @@ div, a, p {
 	}
 	.page .l-big img, .page img.l-big, .page .l-small img, .page img.l-small, .page .r-big img, .page img.r-big, .page .r-small img, .page img.r-small {
 		width: 75%;
+		max-height: 512px;
 	}
 
 	/* tri divider; you can set the divisions with margins */
