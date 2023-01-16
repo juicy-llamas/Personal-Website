@@ -103,14 +103,11 @@ const fn = async function () {
 	gl.getErrorStr = () => glErrStr( gl.getError() );
 
 //	initial resize before we do anything
-// 	canvas.clientWidth = window.visualViewport.width || window.innerWidth;
-// 	canvas.clientHeight = window.visualViewport.height || window.innerHeight;
+	canvas.width = canvas.clientWidth;
+	canvas.height = canvas.clientHeight;
 	
-	console.log( 'w: ' + canvas.clientWidth );
-	console.log( 'h: ' + canvas.clientWidth );
-
-	let cw = canvas.clientWidth / 2;
-	let ch = canvas.clientHeight / 2;
+	let cw = canvas.width / 2;
+	let ch = canvas.height / 2;
 	
 //	global mouse coord and timing variables.
 	let tPrev = 0;
@@ -123,7 +120,7 @@ const fn = async function () {
 	let animFrame = null;
 	
 //	This resizes the gl viewport, sets the color to all zeros (white), and enables blending so we can use opacity in an intuitive sense.
-	gl.viewport( 0, 0, canvas.clientWidth, canvas.clientHeight );
+	gl.viewport( 0, 0, canvas.width, canvas.height );
 	gl.clearColor( 0.0, 0.0, 0.0, 0.0 );
 	gl.clearDepth( 1.0 );//				Clear everything
 	gl.enable( gl.BLEND );//				Enable bLENDING
@@ -183,7 +180,7 @@ const fn = async function () {
 //		Create texture 1
 		gl.activeTexture( gl.TEXTURE0 );
 		gl.bindTexture( gl.TEXTURE_2D, fbs.tx1 );
-		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, canvas.clientWidth, canvas.clientHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null );
+		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null );
 //		Linear is the best filter
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
@@ -193,7 +190,7 @@ const fn = async function () {
 //		Create texture 2
 		gl.activeTexture( gl.TEXTURE2 );
 		gl.bindTexture( gl.TEXTURE_2D, fbs.tx2 );
-		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, canvas.clientWidth, canvas.clientHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null );
+		gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, canvas.width, canvas.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
 //		Bind texture to fb2
@@ -340,7 +337,7 @@ const fn = async function () {
 		
 		const Uresolution = gl.getUniformLocation( program, "Uresolution" );
 		
-		gl.uniform2f( Uresolution, canvas.clientWidth, canvas.clientHeight );
+		gl.uniform2f( Uresolution, canvas.width, canvas.height );
 		
 		const vertexBuffer = gl.createBuffer();
 		gl.bindBuffer( gl.ARRAY_BUFFER, vertexBuffer );
@@ -387,7 +384,7 @@ const fn = async function () {
 			const text = document.getElementById( "circ" + number );
 			this.circles.push( text );
 			text.style.left = (cx - text.clientWidth / 2) + 'px';
-			text.style.top = (canvas.clientHeight - cy - text.clientHeight / 2) + 'px';
+			text.style.top = (canvas.height - cy - text.clientHeight / 2) + 'px';
 
 			let ang1 = angle_offset + Math.PI > Math.PI * 2 ? angle_offset - Math.PI : angle_offset + Math.PI;
 			let ang2 = angle_offset + Math.PI * 1.7 > Math.PI * 2 ? angle_offset - Math.PI * 0.3 : angle_offset + Math.PI * 1.7;
@@ -508,7 +505,7 @@ const fn = async function () {
 		};
 
 //		I'm not sure if the circles will be usable on a smaller screen, so I leave this warning.
-		if ( canvas.clientWidth < 1920 / 2 || canvas.clientHeight < 1080 / 2 )
+		if ( canvas.width < 1920 / 2 || canvas.height < 1080 / 2 )
 			console.warn( "To developer: Rendering circles on small a screen--are you sure you want to do this?" );
 		
 //		These dictate the placing, distance between, and radius of the circles in resting and expanded states.
@@ -526,17 +523,17 @@ const fn = async function () {
 			const note_head = note.style.display === 'none' ? 0 : note.clientHeight + 64;
 			const wgl_head = wgl.style.display !== 'block' ? 0 : wgl.clientHeight;
 			const site_head = head.clientHeight;
-			return ( canvas.clientWidth > 1024 ? Math.max( note_head, site_head ) : ( note_head + site_head ) ) + wgl_head;
+			return ( canvas.width > 1024 ? Math.max( note_head, site_head ) : ( note_head + site_head ) ) + wgl_head;
 		};
 
 		const set_r_consts = () => {
-			const canvas_height = canvas.clientHeight - get_head();
-			const mx = Math.max( canvas.clientWidth, canvas_height );
-			const mn = Math.min( canvas.clientWidth, canvas_height );
+			const canvas_height = canvas.height - get_head();
+			const mx = Math.max( canvas.width, canvas_height );
+			const mn = Math.min( canvas.width, canvas_height );
 			REST_R = Math.sqrt( mx * mn / ( NUM_OF_CIRCLES * NUM_OF_CIRCLES ) / 2 );
 //			console.log( "=============================" );
-//			console.log( canvas.clientWidth );
-//			console.log( canvas.clientHeight );
+//			console.log( canvas.width );
+//			console.log( canvas.height );
 //			console.log( mx*mx/mn/ NUM_OF_CIRCLES/ NUM_OF_CIRCLES * 0.5 );
 //			console.log( mn * 0.36 );
 //			console.log( REST_R );
@@ -557,7 +554,7 @@ const fn = async function () {
 			let best_error = 50000001;
 			this.circles = [];
 
-			const canvas_height = canvas.clientHeight - get_head();
+			const canvas_height = canvas.height - get_head();
 //			center of screen
 			const cenx = cw;
 			const cenh = canvas_height / 2;
@@ -570,8 +567,8 @@ const fn = async function () {
 				let angAdd = 0;
 
 //				Initialize the first circle at one of the 'walls'
-				if ( canvas.clientWidth < canvas.clientHeight ) {
-					xOrig = Math.random() * ( canvas.clientWidth - 2 * PADW ) + PADW;
+				if ( canvas.width < canvas.height ) {
+					xOrig = Math.random() * ( canvas.width - 2 * PADW ) + PADW;
 
 					let k = Math.random();
 					yOrig = k > 0.5 ? PADW : canvas_height - PADW;
@@ -581,7 +578,7 @@ const fn = async function () {
 					yOrig = Math.random() * ( canvas_height - 2 * PADW ) + PADW;
 
 					let k = Math.random();
-					xOrig = k > 0.5 ? PADW : canvas.clientWidth - PADW;
+					xOrig = k > 0.5 ? PADW : canvas.width - PADW;
 //					angAdd = k > 0.5 ? 3 * Math.PI / 2 : Math.PI / 2;
 				}
 
@@ -602,7 +599,7 @@ const fn = async function () {
 
 					const check = () => {
 						const plusx = ( x ) => x > 0 ? x : 0;
-						let error = plusx( PADW - cx ) + plusx( cx - ( canvas.clientWidth - PADW ) ) + plusx( PADW - cy ) + plusx( cy - ( canvas_height - PADW ) );
+						let error = plusx( PADW - cx ) + plusx( cx - ( canvas.width - PADW ) ) + plusx( PADW - cy ) + plusx( cy - ( canvas_height - PADW ) );
 						error *= 2 * error;
 
 						for ( let j = 0; j <= i; j++ ) {
@@ -664,7 +661,7 @@ const fn = async function () {
 		gen_circles( 32 );
 
 		const fix_circles = ( step_amt, w_ratio, h_ratio ) => {;
-			const canvas_height = canvas.clientHeight - get_head();
+			const canvas_height = canvas.height - get_head();
 			const plusx = ( x ) => ( x > 0 ) * x;
 			const products = [];
 			let step_size = 1 / 4;
@@ -695,7 +692,7 @@ const fn = async function () {
 					for ( let j = 0; j < i; j++ ) lp( j );
 					for ( let j = i + 1; j < NUM_OF_CIRCLES; j++ ) lp( j );
 
-					products[ i * 2 + 0 ] += 2 * ( plusx( PADW - cx ) - plusx( cx - ( canvas.clientWidth - PADW ) ) );
+					products[ i * 2 + 0 ] += 2 * ( plusx( PADW - cx ) - plusx( cx - ( canvas.width - PADW ) ) );
 					products[ i * 2 + 1 ] += 2 * ( plusx( PADW - cy ) - plusx( cy - ( canvas_height - PADW ) ) );
 
 					this.circles[ i * CIRCLES_SIZE + 0 ] += products[ i * 2 + 0 ] * step_size;
@@ -708,7 +705,7 @@ const fn = async function () {
 //				Also change the text position
 				const text = this.circles[ i * CIRCLES_SIZE + 8 ];
 				text.style.left = (this.circles[ i * CIRCLES_SIZE + 0 ] - text.clientWidth / 2) + 'px';
-				text.style.top = (canvas.clientHeight - this.circles[ i * CIRCLES_SIZE + 1 ] - text.clientHeight / 2) + 'px';
+				text.style.top = (canvas.height - this.circles[ i * CIRCLES_SIZE + 1 ] - text.clientHeight / 2) + 'px';
 			}
 		};
 		
@@ -769,7 +766,7 @@ const fn = async function () {
 			gl.useProgram( program );
 			
 //			Update circle array (do math calculations) for each circle.
-			const k = ( canvas.clientWidth + canvas.clientHeight );
+			const k = ( canvas.width + canvas.height );
 			for ( var i = 0; i < NUM_OF_CIRCLES; i++ ) {
 				updateCircle( i, k );
 			}
@@ -816,7 +813,7 @@ const fn = async function () {
 		this.resize = ( ow, oh, precision = 10 ) => {
 //			First set the program and change our uniform for resolution.
 			gl.useProgram( program );
-			gl.uniform2f( Uresolution, canvas.clientWidth, canvas.clientHeight );
+			gl.uniform2f( Uresolution, canvas.width, canvas.height );
 			
 //			Next, reset the values for r and the pad / distance (though reseting the pad and distance is not really necessary, I do it anyways in case I do anything more with them in the future).
 			set_r_consts();
@@ -825,8 +822,8 @@ const fn = async function () {
 			this.mousemove( ( mx + 1 ) * cw, - ( my - 1 ) * ch );
 
 //			Then we grow/shrink the circle center coordinates porportionally to the amount the screen did.
-			const w_ratio = canvas.clientWidth / ow;
-			const h_ratio = canvas.clientHeight / oh;
+			const w_ratio = canvas.width / ow;
+			const h_ratio = canvas.height / oh;
 
 			clearTimeout( res_timeout );
 			res_timeout = setTimeout( () => fix_circles( precision, w_ratio, h_ratio ), 40 );
@@ -866,8 +863,8 @@ const fn = async function () {
 //					We want the circles to shrink before we expand the big circle.
 					setTimeout( () => {
 //						Get the radius the circle should be and set it.
-						const max_x = canvas.clientWidth + Math.abs( cx - cw );
-						const max_y = canvas.clientHeight + Math.abs( cy - ch );
+						const max_x = canvas.width + Math.abs( cx - cw );
+						const max_y = canvas.height + Math.abs( cy - ch );
 						this.circles[ i * CIRCLES_SIZE + 4 ] = 1.1 * Math.sqrt( max_x * max_x + max_y * max_y );
 //						Why not?
 						this.circles[ i * CIRCLES_SIZE + 6 ] = 0;
@@ -1039,8 +1036,8 @@ const fn = async function () {
 			res_x = image.width * 0.5 * factor;
 			res_y = image.height * 0.5 * factor;
 
-			scale_x = Math.min( 1, 2 * canvas.clientWidth / res_x );
-			scale_y = Math.min( 1, 2 * canvas.clientHeight / res_y );
+			scale_x = Math.min( 1, 2 * canvas.width / res_x );
+			scale_y = Math.min( 1, 2 * canvas.height / res_y );
 
 // 			console.log( 'scalex: ' + scale_x + ', scaley: ' + scale_y );
 
@@ -1127,8 +1124,8 @@ const fn = async function () {
 		};
 
 		this.resize = () => {
-			scale_x = Math.min( 1, 2 * canvas.clientWidth / res_x );
-			scale_y = Math.min( 1, 2 * canvas.clientHeight / res_y );
+			scale_x = Math.min( 1, 2 * canvas.width / res_x );
+			scale_y = Math.min( 1, 2 * canvas.height / res_y );
 
 			{
 				const l_s = center_x * ( 1 - scale_x ) + extra_scale * scale_x;
@@ -1202,7 +1199,7 @@ const fn = async function () {
 					e.classList.remove( 'fade-out' );
 					e.style.display = 'block';
 				}
-				setTimeout( () => circles.resize( canvas.clientWidth, canvas.clientHeight ), 2 );
+				setTimeout( () => circles.resize( canvas.width, canvas.height ), 2 );
 			}, 450 );
 
 //			restore circles and click event
@@ -1301,16 +1298,16 @@ const fn = async function () {
 
 //	Resize resizes the canvas and GL buffer, along with calling various functions for resizing the different components.
 	const resize = () => {
-		const canvw = canvas.clientWidth;
-		const canvh = canvas.clientHeight;
+		const canvw = canvas.width;
+		const canvh = canvas.height;
 
-// 		canvas.clientWidth = window.visualViewport.width || window.innerWidth;
-// 		canvas.clientHeight = window.visualViewport.height || window.innerHeight;
-		cw = canvas.clientWidth / 2;
-		ch = canvas.clientHeight / 2;
+		canvas.width = canvas.clientWidth;
+		canvas.height = canvas.clientHeight;
+		cw = canvas.width / 2;
+		ch = canvas.height / 2;
 
 		gl.bindFramebuffer( gl.FRAMEBUFFER, null );
-		gl.viewport( 0, 0, canvas.clientWidth, canvas.clientHeight );
+		gl.viewport( 0, 0, canvas.width, canvas.height );
 		gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
 
 		size_fbs();
@@ -1334,7 +1331,7 @@ const fn = async function () {
 		mx = e.clientX / cw - 1;
 		my = -e.clientY / ch + 1;
 
-		circles.mousemove( e.clientX, canvas.clientHeight - e.clientY );
+		circles.mousemove( e.clientX, canvas.height - e.clientY );
 	};
 
 	const mouseout = ( e ) => {
@@ -1363,7 +1360,7 @@ const fn = async function () {
 
 //	When a circle is clicked
 	const click_select = ( e ) => {
-		const nav_to = circles.click( e.clientX, canvas.clientHeight - e.clientY );
+		const nav_to = circles.click( e.clientX, canvas.height - e.clientY );
 		setTimeout( () => {
 			arrow.show( nav_to );
 		}, 800 );
@@ -1391,7 +1388,7 @@ const fn = async function () {
 
 //	Do a resize to sync everything (technically undoes some init work but whatever)
 	resize();
-// 	circles.resize( canvas.clientWidth, canvas.clientHeight, 38 );
+// 	circles.resize( canvas.width, canvas.height, 38 );
 
 //	assign events
 	window.onresize = resize;
