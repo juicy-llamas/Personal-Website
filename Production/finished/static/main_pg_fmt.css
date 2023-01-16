@@ -332,7 +332,7 @@ div, a, p {
 	.page .lr-divider, .page .tri-divider {
 		flex-direction: column;
 	}
-	.page .lr-divider-rv {
+	.page .lr-rv {
 		flex-direction: column-reverse;
 	}
 	.page .l-big {
