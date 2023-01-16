@@ -215,8 +215,8 @@ div, a, p {
 	background-color: var( --link-hover );
 }
 
-/* no stretchy .cont-imgs */
-.page .cont-.cont-img {
+/* no stretchy imgs */
+.page .cont-img {
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -224,7 +224,7 @@ div, a, p {
 	width: 100%;
 	height: 100%;
 }
-.page .cont-.cont-img .cont-img {
+.page .cont-img img {
 	border: 1.2vmin solid #BEE;
 	max-width: 100%;
 	max-height: 100%;
@@ -303,8 +303,8 @@ div, a, p {
 } .page .r-small {
 	width: 34%;
 }
-/* fix for .cont-imgs in links */
-/*.page .l-big > .cont-img, .page .l-small > .cont-img, .page .r-big > .cont-img, .page .r-small > .cont-img {
+/* fix for imgs in links */
+/*.page .l-big > img, .page .l-small > img, .page .r-big > img, .page .r-small > img {
 	width: 100%;
 }*/
 
@@ -350,7 +350,7 @@ div, a, p {
 	}
 	.page .l-big .cont-img, .page .cont-img.l-big, .page .l-small .cont-img, .page .cont-img.l-small, .page .r-big .cont-img, .page .cont-img.r-big, .page .r-small .cont-img, .page .cont-img.r-small {
 		width: 75%;
-		max-height: 512;
+		max-height: 512px;
 	}
 
 	/* tri divider; you can set the divisions with margins */
@@ -421,7 +421,7 @@ div, a, p {
 	height: 100%;
 	position: relative;
 	object-fit: contain;
-} .page .icon-dock .icon .ic-.cont-img {
+} .page .icon-dock .icon .ic-img {
 	width: 100%;
 	height: 100%;
 } .page .icon-dock .return-bar {
@@ -475,11 +475,11 @@ div, a, p {
 }
 
 /* captions and footer */
-.cap-.cont-img {
+.cap-img {
 	display: flex;
 	flex-direction: column;
 }
-.cap-.cont-img p {
+.cap-img p {
 	font-style: italic;
 	font-size: calc( var( --base-fsz )*0.6 + 0.8rem - 0.6rem );
 	text-align: center;
