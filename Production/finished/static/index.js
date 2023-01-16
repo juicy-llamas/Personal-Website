@@ -241,9 +241,9 @@ const fn = async function () {
 		`;
 		
 		const fs = `
-			#ifdef GL_OES_standard_derivatives
-			#extension GL_OES_standard_derivatives : enable
-			#endif
+// 			#ifdef GL_OES_standard_derivatives
+// 			#extension GL_OES_standard_derivatives : enable
+// 			#endif
 
 			#define PI radians( 180. )
 			#define TUPI radians( 360. )
@@ -274,12 +274,12 @@ const fn = async function () {
 					vec2 dist = vec2( dotp, dotp );
 				#endif
 				
-				#ifdef GL_OES_standard_derivatives
-				float delta = abs( dFdx( dist ) ) + abs( dFdy( dist ) );
-				delta = delta < 1. ? 1. : delta;
-				#else
+// 				#ifdef GL_OES_standard_derivatives
+// 				float delta = abs( dFdx( dist ) ) + abs( dFdy( dist ) );
+// 				delta = delta < 1. ? 1. : delta;
+// 				#else
 				float delta = 2. * VR.x;
-				#endif
+// 				#endif
 
 //				With the altdelta was too big, so I 4th rooted it.
 				#ifndef GL_FRAGMENT_PRECISION_HIGH
