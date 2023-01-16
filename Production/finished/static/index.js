@@ -275,8 +275,8 @@ const fn = async function () {
 				#endif
 				
 				#ifdef GL_OES_standard_derivatives
-				float delta = fwidth( dist );
-// 				delta = delta < 1. ? 1. : delta;
+// 				float delta = fwidth( dist );
+				delta = delta < 1. ? 1. : delta;
 				#else
 				float delta = 2. * VR.x;
 				#endif
