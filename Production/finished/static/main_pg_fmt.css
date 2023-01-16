@@ -350,6 +350,8 @@ div, a, p {
 	}
 	.page .l-big .cont-img, .page .cont-img.l-big, .page .l-small .cont-img, .page .cont-img.l-small, .page .r-big .cont-img, .page .cont-img.r-big, .page .r-small .cont-img, .page .cont-img.r-small {
 		width: 75%;
+	}
+	.page .l-big .cont-img img, .page .cont-img.l-big img, .page .l-small .cont-img img, .page .cont-img.l-small img, .page .r-big .cont-img img, .page .cont-img.r-big img, .page .r-small .cont-img img, .page .cont-img.r-small img {
 		max-height: 512px;
 	}
 
