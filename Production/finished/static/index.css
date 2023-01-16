@@ -52,9 +52,9 @@ body {
 	position: absolute;
 	font-family: 'Montserrat', sans-serif;
 	left: calc( 50vw + 18rem );
-	top: calc( ( 2rem + 0.9vmin ) * var( --h-m-factor ) );
+	top: calc( ( 1rem + 0.9vmin ) * var( --h-m-factor ) );
 	width: 14rem;
-	font-size: calc( 0.8rem + 0.6vmin );
+	font-size: calc( 0.8rem + 0.7vmin );
 	color: #337;
 	margin-bottom: 8px;
 	user-select: none;

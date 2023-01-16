@@ -103,8 +103,8 @@ const fn = async function () {
 	gl.getErrorStr = () => glErrStr( gl.getError() );
 
 //	initial resize before we do anything
-	canvas.width = window.visualViewport.width || window.innerWidth;
-	canvas.height = window.visualViewport.height || window.innerHeight;
+// 	canvas.width = window.visualViewport.width || window.innerWidth;
+// 	canvas.height = window.visualViewport.height || window.innerHeight;
 	
 	let cw = canvas.width / 2;
 	let ch = canvas.height / 2;
@@ -1301,8 +1301,8 @@ const fn = async function () {
 		const canvw = canvas.width;
 		const canvh = canvas.height;
 
-		canvas.width = window.visualViewport.width || window.innerWidth;
-		canvas.height = window.visualViewport.height || window.innerHeight;
+// 		canvas.width = window.visualViewport.width || window.innerWidth;
+// 		canvas.height = window.visualViewport.height || window.innerHeight;
 		cw = canvas.width / 2;
 		ch = canvas.height / 2;
 
