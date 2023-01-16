@@ -225,10 +225,10 @@ div, a, p {
 	height: 100%;
 }
 .page .cont-img img {
-	border: 2vmin solid #BEE;
+	border: 1.2vmin solid #BEE;
 	max-width: 100%;
 	max-height: 100%;
-	border-radius: 6rem;
+	border-radius: calc( 2rem + 2vmin );
 }
 
 .page .git-icon::before, .page .git-icon::after {
@@ -346,7 +346,7 @@ div, a, p {
 		width: 100%;
 	}
 	.page .l-big img, .page img.l-big, .page .l-small img, .page img.l-small, .page .r-big img, .page img.r-big, .page .r-small img, .page img.r-small {
-		width: 50%;
+		width: 75%;
 	}
 
 	/* tri divider; you can set the divisions with margins */
