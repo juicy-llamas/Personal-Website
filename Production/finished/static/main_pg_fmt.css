@@ -404,10 +404,9 @@ div, a, p {
 	margin-left: calc( 0.6rem + 1vw );
 }
 
-.page .contacts * {
-	overflow-wrap: break-word;
-}
 .page .contacts a, .page .contacts h3 {
+	overflow-wrap: break-word;
+	white-space: normal;
 	max-width: calc( 40vw - 4 * var( --p-m-default ) );
 	font-size: calc( var( --base-fsz ) * 1.6 + .6rem );
 }
