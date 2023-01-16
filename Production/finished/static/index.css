@@ -13,7 +13,7 @@
 /* 	dis should be circle diameter, perhaps set w js */
 	--crc-txt-sz: 30em;
 	--h-m-factor: .7;
-	--head-ftsz: calc( 2.2rem + 1.1vmin );
+	--head-ftsz: calc( 2.4rem + 1.6vmin );
 	--head-tmgn: calc( ( 1.8rem + 0.9vmin ) * var( --h-m-factor ) );
 	--head-bmgn: calc( ( 1.2rem + 0.6vmin ) * var( --h-m-factor ) );
 }
@@ -35,6 +35,12 @@ body {
 	overflow-y: auto;
 	overflow-x: hidden;
 /* 	background-color: #000; */
+}
+
+.disappear-on-focus {
+	position: sticky;
+	width: 100%;
+	height: 100%;
 }
 
 .site-header {
