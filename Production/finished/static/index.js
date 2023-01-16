@@ -106,6 +106,9 @@ const fn = async function () {
 // 	canvas.clientWidth = window.visualViewport.width || window.innerWidth;
 // 	canvas.clientHeight = window.visualViewport.height || window.innerHeight;
 	
+	console.log( 'w: ' + canvas.clientWidth );
+	console.log( 'h: ' + canvas.clientWidth );
+
 	let cw = canvas.clientWidth / 2;
 	let ch = canvas.clientHeight / 2;
 	
