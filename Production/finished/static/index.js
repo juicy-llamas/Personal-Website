@@ -1392,7 +1392,8 @@ const fn = async function () {
 
 //	assign events
 	window.onresize = resize;
-	if ( screen && screen.orientation ) screen.orientation.onchange = resize;
+	if ( screen && screen.orientation ) screen.orientation.onchange = ( e ) => { resize(); e.stopPropagation(); };
+	window.onorientationchange = ( e ) => { resize(); e.stopPropagation(); };
 // 	window.onbeforeunload = leavepage;
 	window.onpagehide = leavepage;
 	const vs_ch = ( e ) => { if ( document.visibilityState === 'hidden' ) leavepage( e ); else animFrame = requestAnimationFrame( animate ); };
