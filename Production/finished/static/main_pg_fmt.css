@@ -330,7 +330,7 @@ div, a, p {
 /* media queries for horizontal displays */
 @media screen and (max-width: 1660px) {
 	.page .lr-divider, .page .tri-divider {
-		flex-direction: column;
+		flex-direction: column-reverse;
 	}
 	.page .l-big {
 		width: 100%;
