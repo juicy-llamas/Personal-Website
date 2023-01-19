@@ -1411,7 +1411,7 @@ const fn = async function () {
 			currentPointer = e.touches[ 0 ].identifier;
 	};
 	window.addEventListener( 'touchstart', vs_ts, { passive: false } );
-	vs_te = ( e ) => {
+	const vs_te = ( e ) => {
 		if ( arrow.focused === false ) e.preventDefault();
 		if ( !( e.targetTouches ) || _tany( e.targetTouches, ( i ) => i.identifier === currentPointer ) )
 			currentPointer = null;
