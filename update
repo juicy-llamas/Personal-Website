@@ -1,4 +1,5 @@
 #!/bin/bash
+cmsg=${1:-minor change on site}
 git add .
 git commit -m "minor change on site"
 git push origin master

@@ -1180,6 +1180,7 @@ const fn = async function () {
 
 //		This function turns off the display and resets the circles.
 		const mouseclick = () => {
+			this.focused = false;
 //			Fade out content and back arrow, then remove it from display
 			arrow_obj.onpointerover = undefined;
 			arrow_obj.onpointerout = undefined;
@@ -1216,6 +1217,7 @@ const fn = async function () {
 //		This function shows the back arrow, sets up it's animations and events, and then shows the rest of the document that's selected.
 		this.show = ( THE_CHOSEN_DOCUMENT ) => {
 			if ( THE_CHOSEN_DOCUMENT !== -1 ) {
+				this.focused = true;
 //				If we have a timeout set to remove the arrow, disable it immediately...
 				clearTimeout( arrow_timeout );
 //				Same goes for the elements (if we clicked off an element and then really quickly clicked back on it again for some reason...)
@@ -1257,6 +1259,8 @@ const fn = async function () {
 
 		this.update = () => {};
 
+		this.focused = false;
+
 		this.reset = () => {
 			goal_opacity = OPACITY_REST;
 			current_opacity = OPACITY_REST;
@@ -1286,7 +1290,7 @@ const fn = async function () {
 		bkgd.update();
 		arrow.update();
 
-		window.ontouchmove = touchmove;
+		window.addEventListener( 'touchmove', touchmove, { passive: false } );
 		window.onmousemove = mousemove;
 		animFrame = requestAnimationFrame( animate );
 		tPrev = tNow;
@@ -1317,11 +1321,11 @@ const fn = async function () {
 	};
 
 	const touchmove = ( e ) => {
-		console.log( 'touchmove: ' );
+		if ( arrow.focused === false )
+			e.preventDefault();
 		let elm;
-		if ( e.targetTouches && !( elm = _tfind( e.targetTouches, ( i ) => i.identifier === currentPointer ) ) ) {
+		if ( e.targetTouches && !( elm = _tfind( e.targetTouches, ( i ) => i.identifier === currentPointer ) ) )
 			return;
-		}
 		window.ontouchmove = null;
 		mousemove( elm );
 	}
@@ -1336,7 +1340,7 @@ const fn = async function () {
 
 	const mouseout = ( e ) => {
 		e.preventDefault();
-		console.log( 'mouseout: ' );
+// 		console.log( 'mouseout: ' );
 		let ind;
 		if ( e.targetTouches && !( ind = _tfind( e.targetTouches, ( i ) => i.identifier === currentPointer ) ) )
 			return;
@@ -1365,7 +1369,7 @@ const fn = async function () {
 			arrow.show( nav_to );
 		}, 800 );
 
-		console.log( nav_to );
+// 		console.log( nav_to );
 		if ( nav_to !== -1 ) {
 //			Fade out site title.
 			const hide_objs = document.getElementsByClassName( 'disappear-on-focus' );
@@ -1401,16 +1405,18 @@ const fn = async function () {
 	canvas.onclick = click_select;
 	window.onmouseleave = mouseout;
 	window.onmouseout = mouseout;
-	window.ontouchstart = ( e ) => {
-		console.log( 'touchstart: ' );
+	const vs_ts = ( e ) => {
+		if ( arrow.focused === false ) e.preventDefault();
 		if ( currentPointer === null && e.touches && e.touches.length > 0 )
 			currentPointer = e.touches[ 0 ].identifier;
 	};
-	window.ontouchend = ( e ) => {
-		console.log( 'touchend: ' );
+	window.addEventListener( 'touchstart', vs_ts, { passive: false } );
+	vs_te = ( e ) => {
+		if ( arrow.focused === false ) e.preventDefault();
 		if ( !( e.targetTouches ) || _tany( e.targetTouches, ( i ) => i.identifier === currentPointer ) )
 			currentPointer = null;
 	};
+	window.addEventListener( 'touchend', vs_te, { passive: false } );
 	window.ontouchcancel = ( e ) => { canvas.ontouchend( e ); mouseout( e ); };
 
 // 	specific bug w firefox
@@ -1426,8 +1432,8 @@ const fn = async function () {
 		window.ontouchmove = undefined;
 		window.onmouseleave = undefined;
 		window.onmouseout = undefined;
-		window.ontouchstart = undefined;
-		window.ontouchend = undefined;
+		window.removeEventListener( 'touchstart', vs_ts );
+		window.removeEventListener( 'touchend', vs_te );
 		window.ontouchcancel = undefined;
 
 // 		fade out everything
