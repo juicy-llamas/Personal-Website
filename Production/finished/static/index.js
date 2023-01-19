@@ -1364,6 +1364,7 @@ const fn = async function () {
 
 //	When a circle is clicked
 	const click_select = ( e ) => {
+		if ( arrow.focused === false ) e.preventDefault();
 		const nav_to = circles.click( e.clientX, canvas.height - e.clientY );
 		setTimeout( () => {
 			arrow.show( nav_to );
@@ -1406,7 +1407,7 @@ const fn = async function () {
 	window.onmouseleave = mouseout;
 	window.onmouseout = mouseout;
 	const vs_ts = ( e ) => {
-		if ( arrow.focused === false ) e.preventDefault();
+// 		if ( arrow.focused === false ) e.preventDefault();
 		if ( currentPointer === null && e.touches && e.touches.length > 0 )
 			currentPointer = e.touches[ 0 ].identifier;
 	};
